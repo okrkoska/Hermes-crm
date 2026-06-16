@@ -3,7 +3,7 @@
 Sales CRM pro správu leadů a obchodních příležitostí.
 
 ## Funkce
-- 🔐 PIN přihlášení (výchozí: `2026`) per lokace
+- 🔐 PIN přihlášení  per lokace
 - 🌍 6 lokací: Altenkundstadt, Sonnefeld, Otelfingen, Valdengo, Plíseň, Jacksonville
 - 📊 Dashboard s monthly trend grafem
 - 🌐 Group Dashboard — přehled všech lokací
