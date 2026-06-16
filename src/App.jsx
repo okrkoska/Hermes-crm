@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 // ─── Locations ────────────────────────────────────────────────────────────────
-const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Plíseň", "Jacksonville"];
-const LOCATION_FLAGS = { Altenkundstadt: "🇩🇪", Sonnefeld: "🇩🇪", Otelfingen: "🇨🇭", Valdengo: "🇮🇹", "Plíseň": "🇨🇿", Jacksonville: "🇺🇸" };
+const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Plzen", "Jacksonville"];
+const LOCATION_FLAGS = { Altenkundstadt: "🇩🇪", Sonnefeld: "🇩🇪", Otelfingen: "🇨🇭", Valdengo: "🇮🇹", "Plzen": "🇨🇿", Jacksonville: "🇺🇸" };
 
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
