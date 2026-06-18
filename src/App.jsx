@@ -87,7 +87,8 @@ const dealToRow = (d, location) => ({
 
 // ─── Locations ────────────────────────────────────────────────────────────────
 const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
-const LOCATION_FLAGS = { Altenkundstadt: "🇩🇪", Sonnefeld: "🇩🇪", Otelfingen: "🇨🇭", Valdengo: "🇮🇹", "Pilsen": "🇨🇿", Jacksonville: "🇺🇸" };
+const LOCATION_FLAGS = { Altenkundstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
+const Flag = ({ loc, size=16 }) => <span className={`fi fi-${LOCATION_FLAGS[loc]||"un"}`} style={{ width:size*1.33, height:size, display:"inline-block", verticalAlign:"middle", borderRadius:2, marginRight:5, flexShrink:0 }} />;
 
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
@@ -244,10 +245,10 @@ function PinPad({ value, onChange }) {
         {[0,1,2,3].map(i => (
           <div key={i} style={{
             width:48, height:56, borderRadius:10,
-            border:`2px solid ${value.length > i ? "#3B82F6" : "#1E3A5F"}`,
-            background: value.length > i ? "#3B82F622" : "#0B1525",
+            border:`2px solid ${value.length > i ? "#2563EB" : "#BFDBFE"}`,
+            background: value.length > i ? "#DBEAFE" : "#F8FAFC",
             display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:28, color:"#3B82F6", transition:"all .15s"
+            fontSize:28, color:"#2563EB", transition:"all .15s"
           }}>
             {value.length > i ? "●" : ""}
           </div>
@@ -257,24 +258,24 @@ function PinPad({ value, onChange }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
         {[1,2,3,4,5,6,7,8,9].map(n => (
           <button key={n} onClick={() => press(String(n))}
-            style={{ padding:"14px 0", borderRadius:10, border:"1px solid #1E3A5F", background:"#0B1525", color:"#E2E8F0", fontSize:20, fontWeight:600, cursor:"pointer", transition:"all .1s" }}
-            onMouseEnter={e => e.currentTarget.style.background="#1E3A5F"}
-            onMouseLeave={e => e.currentTarget.style.background="#0B1525"}>
+            style={{ padding:"14px 0", borderRadius:10, border:"1px solid #BFDBFE", background:"#fff", color:"#1E3A8A", fontSize:20, fontWeight:600, cursor:"pointer", transition:"all .1s" }}
+            onMouseEnter={e => e.currentTarget.style.background="#EFF6FF"}
+            onMouseLeave={e => e.currentTarget.style.background="#fff"}>
             {n}
           </button>
         ))}
         {/* Bottom row: empty, 0, delete */}
         <div />
         <button onClick={() => press("0")}
-          style={{ padding:"14px 0", borderRadius:10, border:"1px solid #1E3A5F", background:"#0B1525", color:"#E2E8F0", fontSize:20, fontWeight:600, cursor:"pointer", transition:"all .1s" }}
-          onMouseEnter={e => e.currentTarget.style.background="#1E3A5F"}
-          onMouseLeave={e => e.currentTarget.style.background="#0B1525"}>
+          style={{ padding:"14px 0", borderRadius:10, border:"1px solid #BFDBFE", background:"#fff", color:"#1E3A8A", fontSize:20, fontWeight:600, cursor:"pointer", transition:"all .1s" }}
+          onMouseEnter={e => e.currentTarget.style.background="#EFF6FF"}
+          onMouseLeave={e => e.currentTarget.style.background="#fff"}>
           0
         </button>
         <button onClick={del}
-          style={{ padding:"14px 0", borderRadius:10, border:"1px solid #1E3A5F", background:"#0B1525", color:"#94A3B8", fontSize:18, cursor:"pointer", transition:"all .1s" }}
-          onMouseEnter={e => e.currentTarget.style.background="#1E3A5F"}
-          onMouseLeave={e => e.currentTarget.style.background="#0B1525"}>
+          style={{ padding:"14px 0", borderRadius:10, border:"1px solid #BFDBFE", background:"#fff", color:"#60A5FA", fontSize:18, cursor:"pointer", transition:"all .1s" }}
+          onMouseEnter={e => e.currentTarget.style.background="#EFF6FF"}
+          onMouseLeave={e => e.currentTarget.style.background="#fff"}>
           ⌫
         </button>
       </div>
@@ -310,25 +311,26 @@ function LoginScreen({ onLogin, lang, setLang }) {
   useEffect(() => { if (pin.length === 4) submitPin(); }, [pin]);
 
   return (
-    <div style={{ minHeight:"100vh", background:"#0B1525", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',system-ui,sans-serif" }}>
+    <div style={{ minHeight:"100vh", background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Inter',system-ui,sans-serif" }}>
       <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
-      <div style={{ width:380, background:"#111C2D", borderRadius:16, border:"1px solid #1E3A5F", boxShadow:"0 24px 60px rgba(0,0,0,.5)", overflow:"hidden", animation: shake ? "shake .4s" : "none" }}>
-        {/* Header */}
-        <div style={{ background:"linear-gradient(135deg,#1E3A5F,#0F2744)", padding:"28px 28px 22px", textAlign:"center", borderBottom:"1px solid #1E3A5F" }}>
-          <div style={{ width:52, height:52, borderRadius:14, background:"linear-gradient(135deg,#3B82F6,#6366F1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, margin:"0 auto 12px" }}>⬡</div>
-          <div style={{ fontSize:24, fontWeight:800, color:"#E2E8F0", letterSpacing:"-.03em" }}>CRM<span style={{color:"#3B82F6"}}>flow</span></div>
+      <div style={{ width:380, background:"#ffffff", borderRadius:16, border:"1px solid #BFDBFE", boxShadow:"0 8px 32px rgba(37,99,235,.12)", overflow:"hidden", animation: shake ? "shake .4s" : "none" }}>
+        {/* Header — Variant A: light blue corporate */}
+        <div style={{ background:"#EFF6FF", padding:"28px 28px 22px", textAlign:"center", borderBottom:"1px solid #DBEAFE" }}>
+          <div style={{ width:52, height:52, borderRadius:14, background:"#2563EB", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, margin:"0 auto 12px", color:"#fff", fontWeight:800 }}>⬡</div>
+          <div style={{ fontSize:24, fontWeight:800, color:"#1E3A8A", letterSpacing:"-.03em" }}>CRM<span style={{color:"#2563EB"}}>flow</span></div>
+          <div style={{ fontSize:13, color:"#60A5FA", marginTop:4 }}>Sales Management Platform</div>
           {/* Lang toggle */}
           <div style={{ display:"flex", justifyContent:"center", gap:6, marginTop:12 }}>
             {["en","de"].map(l => (
               <button key={l} onClick={() => setLang(l)}
-                style={{ padding:"3px 12px", borderRadius:6, border:`1px solid ${lang===l?"#3B82F6":"#1E3A5F"}`, background: lang===l?"#3B82F622":"transparent", color: lang===l?"#3B82F6":"#64748B", fontSize:12, cursor:"pointer", fontWeight:600 }}>
-                {l === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                style={{ padding:"3px 12px", borderRadius:6, border:`1px solid ${lang===l?"#2563EB":"#BFDBFE"}`, background: lang===l?"#DBEAFE":"transparent", color: lang===l?"#1D4ED8":"#60A5FA", fontSize:12, cursor:"pointer", fontWeight:600 }}>
+                {l === "en" ? "EN" : "DE"}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{ padding:"24px 28px 28px" }}>
+        <div style={{ padding:"24px 28px 28px", background:"#fff" }}>
           {/* Step indicator */}
           <div style={{ display:"flex", gap:6, marginBottom:22 }}>
             {["location","name","pin"].map((s,i) => (
@@ -339,17 +341,17 @@ function LoginScreen({ onLogin, lang, setLang }) {
           {/* STEP 1: Location */}
           {step === "location" && (
             <>
-              <div style={{ fontSize:13, color:"#64748B", marginBottom:14, textAlign:"center" }}>{t.selectLocation}</div>
+              <div style={{ fontSize:13, color:"#3B82F6", marginBottom:14, textAlign:"center", fontWeight:600 }}>{t.selectLocation}</div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:18 }}>
                 {LOCATIONS.map(loc => (
                   <button key={loc} onClick={() => { setLocation(loc); setErr(""); }}
-                    style={{ padding:"10px 8px", borderRadius:8, border:`2px solid ${location===loc?"#3B82F6":"#1E3A5F"}`, background: location===loc?"#1E3A5F22":"#0B1525", color: location===loc?"#E2E8F0":"#64748B", fontSize:12, fontWeight: location===loc?700:400, cursor:"pointer", transition:"all .15s", textAlign:"left" }}>
+                    style={{ padding:"10px 8px", borderRadius:8, border:`2px solid ${location===loc?"#2563EB":"#BFDBFE"}`, background: location===loc?"#DBEAFE":"#F8FAFC", color: location===loc?"#1E3A8A":"#64748B", fontSize:12, fontWeight: location===loc?700:400, cursor:"pointer", transition:"all .15s", textAlign:"left" }}>
                     <span style={{ fontSize:16, marginRight:6 }}>{LOCATION_FLAGS[loc]}</span>{loc}
                   </button>
                 ))}
               </div>
               <button onClick={submitLocation} disabled={!location}
-                style={{ width:"100%", padding:"12px 0", borderRadius:8, border:"none", background: location?"linear-gradient(135deg,#3B82F6,#6366F1)":"#1E3A5F", color: location?"#fff":"#334155", fontSize:15, fontWeight:700, cursor: location?"pointer":"default" }}>
+                style={{ width:"100%", padding:"12px 0", borderRadius:8, border:"none", background: location?"#2563EB":"#BFDBFE", color: location?"#fff":"#93C5FD", fontSize:15, fontWeight:700, cursor: location?"pointer":"default" }}>
                 {t.unlock.replace("→","").trim()} →
               </button>
             </>
@@ -359,13 +361,13 @@ function LoginScreen({ onLogin, lang, setLang }) {
           {step === "name" && (
             <>
               <div style={{ fontSize:13, color:"#64748B", marginBottom:6, textAlign:"center" }}>
-                {LOCATION_FLAGS[location]} <strong style={{color:"#94A3B8"}}>{location}</strong>
+                <Flag loc={location} size={14} /><strong style={{color:"#94A3B8"}}>{location}</strong>
               </div>
               <div style={{ fontSize:13, color:"#64748B", marginBottom:14, textAlign:"center" }}>{t.yourName}</div>
               <input value={name} onChange={e => { setName(e.target.value); setErr(""); }}
                 onKeyDown={e => e.key==="Enter" && submitName()}
                 placeholder={t.yourName} autoFocus
-                style={{ width:"100%", padding:"12px 14px", borderRadius:8, border:`1px solid ${err?"#EF4444":"#1E3A5F"}`, background:"#0B1525", color:"#E2E8F0", fontSize:15, boxSizing:"border-box", outline:"none", marginBottom:8 }} />
+                style={{ width:"100%", padding:"12px 14px", borderRadius:8, border:`1px solid ${err?"#EF4444":"#BFDBFE"}`, background:"#fff", color:"#0F172A", fontSize:15, boxSizing:"border-box", outline:"none", marginBottom:8 }} />
               {err && <div style={{ fontSize:12, color:"#EF4444", marginBottom:8 }}>{err}</div>}
               <div style={{ display:"flex", gap:8, marginTop:4 }}>
                 <button onClick={() => setStep("location")} style={{ flex:1, padding:"11px 0", borderRadius:8, border:"1px solid #1E3A5F", background:"none", color:"#64748B", fontSize:14, cursor:"pointer" }}>←</button>
@@ -378,7 +380,7 @@ function LoginScreen({ onLogin, lang, setLang }) {
           {step === "pin" && (
             <>
               <div style={{ fontSize:13, color:"#64748B", marginBottom:2, textAlign:"center" }}>
-                {LOCATION_FLAGS[location]} <strong style={{color:"#94A3B8"}}>{location}</strong> · <span style={{color:"#3B82F6"}}>{name}</span>
+                <Flag loc={location} size={14} /><strong style={{color:"#94A3B8"}}>{location}</strong> · <span style={{color:"#3B82F6"}}>{name}</span>
               </div>
               <div style={{ fontSize:13, color:"#64748B", marginTop:10, marginBottom:2, textAlign:"center" }}>{t.pin}</div>
               <PinPad value={pin} onChange={v => { setPin(v); setErr(""); }} />
@@ -403,35 +405,41 @@ function StageProgress({ stage, onChange, lang, th }) {
   const meta = stageMeta(stage);
   const mainStages = STAGES.slice(0,4);
 
+  const termColor = stage === "Won" ? "#10B981" : stage === "Lost" ? "#EF4444" : null;
+
   return (
     <div style={{ width:"100%" }}>
       <div style={{ display:"flex", alignItems:"center" }}>
         {mainStages.map((s, i) => {
           const sm = STAGE_META[i];
-          const done = !isTerminal && i <= idx;
-          const now = !isTerminal && i === idx;
+          const dotColor = isTerminal ? termColor : (i <= idx ? sm.color : null);
+          const lineColor = isTerminal ? termColor : (i < idx ? sm.color : th.border);
+          const isNow = !isTerminal && i === idx;
           return (
             <div key={s} style={{ display:"flex", alignItems:"center", flex: i < 3 ? 1 : "none" }}>
               <button onClick={() => onChange(s)} title={stageLabel(s,lang)}
-                style={{ width:26, height:26, borderRadius:"50%", border:`2px solid ${now ? sm.color : done ? sm.color : th.border}`,
-                  background: done ? sm.color : th.surface2, color: done ? "#fff" : th.muted,
+                style={{ width:26, height:26, borderRadius:"50%",
+                  border:`2px solid ${dotColor || th.border}`,
+                  background: dotColor || th.surface2,
+                  color: dotColor ? "#fff" : th.muted,
                   cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
                   fontSize:10, fontWeight:700, flexShrink:0,
-                  boxShadow: now ? `0 0 0 3px ${sm.color}33` : "none", transition:"all .2s" }}>
-                {done ? "✓" : i+1}
+                  boxShadow: isNow ? `0 0 0 3px ${sm.color}33` : isTerminal ? `0 0 0 3px ${termColor}22` : "none",
+                  transition:"all .2s" }}>
+                {(isTerminal || (!isTerminal && i < idx)) ? "✓" : i+1}
               </button>
-              {i < 3 && <div style={{ flex:1, height:2, background: !isTerminal && i < idx ? sm.color : th.border, transition:"background .3s" }} />}
+              {i < 3 && <div style={{ flex:1, height:2, background: lineColor, transition:"background .3s" }} />}
             </div>
           );
         })}
       </div>
       <div style={{ display:"flex", justifyContent:"space-between", marginTop:5 }}>
         {t.stagesShort.map((s,i) => (
-          <span key={i} style={{ fontSize:9, color: !isTerminal && i === idx ? STAGE_META[i].color : th.text2, textTransform:"uppercase", letterSpacing:".04em", fontWeight: i === idx ? 800 : 400, flex:1, textAlign: i===0?"left":i===3?"right":"center" }}>{s}</span>
+          <span key={i} style={{ fontSize:9, color: isTerminal ? termColor : (!isTerminal && i === idx ? STAGE_META[i].color : th.text2), textTransform:"uppercase", letterSpacing:".04em", fontWeight: (isTerminal || i === idx) ? 800 : 400, flex:1, textAlign: i===0?"left":i===3?"right":"center" }}>{s}</span>
         ))}
       </div>
       {isTerminal && (
-        <div style={{ marginTop:6, display:"inline-flex", alignItems:"center", gap:5, padding:"2px 10px", borderRadius:10, background:meta.bg, color:meta.color, fontSize:11, fontWeight:700 }}>
+        <div style={{ marginTop:6, display:"inline-flex", alignItems:"center", gap:5, padding:"2px 10px", borderRadius:10, background: stage==="Won"?"#10B98122":"#EF444422", color:termColor, fontSize:11, fontWeight:700, border:`1px solid ${termColor}44` }}>
           {stage === "Won" ? "✓" : "✕"} {stageLabel(stage, lang)}
         </div>
       )}
@@ -667,7 +675,7 @@ function SettingsPanel({ session, lang, setLang, onSignOut, t, theme, setTheme, 
           </div>
           <div>
             <div style={{ fontSize:16, fontWeight:700, color:th.text }}>{session.name}</div>
-            <div style={{ fontSize:13, color:th.muted }}>{LOCATION_FLAGS[session.location]} {session.location}</div>
+            <div style={{ fontSize:13, color:th.muted, display:"flex", alignItems:"center" }}><Flag loc={session.location} size={13} />{session.location}</div>
           </div>
         </div>
         <button onClick={onSignOut} style={{ marginTop:16, padding:"7px 16px", borderRadius:7, border:"1px solid #EF444433", background:"none", color:"#EF4444", fontSize:13, cursor:"pointer" }}>{t.signOut}</button>
@@ -1073,7 +1081,7 @@ function GroupDashboard({ th, t, lang }) {
           {LOCATIONS.map((loc,i) => (
             <button key={loc} onClick={()=>setTrendScope(loc)}
               style={{ padding:"4px 12px", borderRadius:6, border:`1px solid ${trendScope===loc?LOC_COLORS[i]:th.border}`, background:trendScope===loc?LOC_COLORS[i]+"22":th.surface2, color:trendScope===loc?LOC_COLORS[i]:th.muted, fontSize:11, fontWeight:600, cursor:"pointer" }}>
-              {LOCATION_FLAGS[loc]} {loc}
+              {<Flag loc={loc} size={13} />} {loc}
             </button>
           ))}
         </div>
@@ -1088,7 +1096,7 @@ function GroupDashboard({ th, t, lang }) {
           {selectedSeries.map((s,i) => (
             <div key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
               <div style={{ width:20, height:3, borderRadius:2, background:s.color }} />
-              <span style={{ fontSize:11, color:th.text2 }}>{LOCATION_FLAGS[s.label] || ""} {s.label}</span>
+              <span style={{ fontSize:11, color:th.text2, display:"flex", alignItems:"center", gap:4 }}>{LOCATIONS.includes(s.label) && <Flag loc={s.label} size={11} />}{s.label}</span>
             </div>
           ))}
         </div>
@@ -1108,7 +1116,7 @@ function GroupDashboard({ th, t, lang }) {
             {/* Header */}
             <div style={{ padding:"14px 18px", borderBottom:`1px solid ${th.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", background:th.surface2 }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:22 }}>{LOCATION_FLAGS[ls.loc]}</span>
+                <Flag loc={ls.loc} size={22} />
                 <div>
                   <div style={{ fontSize:15, fontWeight:700, color:th.text }}>{ls.loc}</div>
                   <div style={{ fontSize:11, color:th.muted }}>{ls.total} leads</div>
@@ -1168,7 +1176,7 @@ function GroupDashboard({ th, t, lang }) {
         {[...locStats].sort((a,b)=>b.pipeline-a.pipeline).map((ls,i) => (
           <div key={ls.loc} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
             <div style={{ width:22, fontSize:12, color:th.muted, textAlign:"center", fontWeight:700 }}>#{i+1}</div>
-            <span style={{ fontSize:16 }}>{LOCATION_FLAGS[ls.loc]}</span>
+            <Flag loc={ls.loc} size={16} />
             <div style={{ width:110, fontSize:12, color:th.text, fontWeight:500, flexShrink:0 }}>{ls.loc}</div>
             <div style={{ flex:1, height:18, borderRadius:4, background:th.border, overflow:"hidden", position:"relative" }}>
               <div style={{ height:"100%", width:maxPipeline>0?(ls.pipeline/maxPipeline*100)+"%":"0%", background:LOC_COLORS[LOCATIONS.indexOf(ls.loc)]+"BB", borderRadius:4, transition:"width .6s ease" }} />
@@ -1410,7 +1418,7 @@ export default function App() {
           <span style={{ fontWeight:800, fontSize:15, letterSpacing:"-.03em" }}>CRM<span style={{color:"#3B82F6"}}>flow</span></span>
         </div>
         <div style={{ fontSize:12, color:th.muted, borderLeft:`1px solid ${th.border}`, paddingLeft:12 }}>
-          {LOCATION_FLAGS[session.location]} <span style={{color:th.text2}}>{session.location}</span>
+          <Flag loc={session.location} size={13} /><span style={{color:th.text2}}>{session.location}</span>
         </div>
         <nav style={{ display:"flex", gap:2 }}>
           {NAV.map(n => (
