@@ -1,4 +1,89 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+// ─── Supabase Client ──────────────────────────────────────────────────────────
+const SUPABASE_URL = "https://nfbewqzmgbidzshuhgga.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mYmV3cXptZ2JpZHpzaHVoZ2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NDk3NzAsImV4cCI6MjA5NzMyNTc3MH0.JZE_qTqlB1jNKcirOGEXiKZy2MFRCKOt5atY60IzXUs";
+
+const sb = {
+  headers: {
+    "apikey": SUPABASE_KEY,
+    "Authorization": `Bearer ${SUPABASE_KEY}`,
+    "Content-Type": "application/json",
+    "Prefer": "return=representation",
+  },
+  async query(table, params = "") {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, { headers: this.headers });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  async insert(table, body) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: "POST", headers: this.headers, body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  async update(table, id, body) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: "PATCH", headers: this.headers, body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  async delete(table, id) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: "DELETE", headers: this.headers
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return true;
+  },
+  async uploadFile(path, file) {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/attachments/${path}`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` },
+      body: file
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  },
+  fileUrl(path) {
+    return `${SUPABASE_URL}/storage/v1/object/sign/attachments/${path}`;
+  },
+  async signedUrl(path) {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/attachments/${path}`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ expiresIn: 3600 })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const d = await r.json();
+    return `${SUPABASE_URL}/storage/v1${d.signedURL}`;
+  },
+  async deleteFile(path) {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/attachments/${path}`, {
+      method: "DELETE",
+      headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
+    });
+    return r.ok;
+  }
+};
+
+// DB row → app deal
+const rowToDeal = (r) => ({
+  id: r.id, name: r.name, company: r.company, value: Number(r.value),
+  stage: r.stage, owner: r.owner, probability: r.probability,
+  source: r.source||"", notes: r.notes||"", goLive: r.go_live||"",
+  lostReason: r.lost_reason||"", created: r.created_at, updated: r.updated_at,
+});
+
+// App deal → DB row
+const dealToRow = (d, location) => ({
+  location, name: d.name, company: d.company, value: d.value,
+  stage: d.stage, owner: d.owner, probability: d.probability,
+  source: d.source||"", notes: d.notes||"", go_live: d.goLive||"",
+  lost_reason: d.lostReason||"", updated_at: today(),
+});
+
 
 // ─── Locations ────────────────────────────────────────────────────────────────
 const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
@@ -213,8 +298,11 @@ function LoginScreen({ onLogin, lang, setLang }) {
   const submitName = () => { if (name.trim()) setStep("pin"); else setErr(t.nameRequired); };
   const submitPin = async () => {
     if (pin.length !== 4) { setErr(t.pinInvalid); doShake(); return; }
-    let stored = null;
-    try { const r = await window.storage.get(`pin-${location}`); stored = r ? r.value : "2026"; } catch { stored = "2026"; }
+    let stored = "2026";
+    try {
+      const rows = await sb.query("location_pins", `?location=eq.${encodeURIComponent(location)}&select=pin`);
+      if (rows && rows.length > 0) stored = rows[0].pin;
+    } catch { stored = "2026"; }
     if (pin === stored) { onLogin({ location, name: name.trim(), lang }); }
     else { setErr(t.wrongPin); doShake(); setPin(""); }
   };
@@ -434,7 +522,8 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
                 <div style={{ fontSize:12, color:th.text }}>{deal.lostReason}</div>
               </div>
             )}
-            {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic" }}>"{deal.notes}"</div>}
+            {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic", marginBottom:4 }}>"{deal.notes}"</div>}
+            <AttachmentsPanel dealId={deal.id} th={th} t={t} />
           </div>
         )}
       </div>
@@ -534,9 +623,20 @@ function SettingsPanel({ session, lang, setLang, onSignOut, t, theme, setTheme, 
     if (!/^\d{4}$/.test(newPin1)) { setMsg({text:t.pinInvalid, ok:false}); return; }
     if (newPin1 !== newPin2) { setMsg({text:t.pinMismatch, ok:false}); return; }
     let stored = "2026";
-    try { const r = await window.storage.get(`pin-${session.location}`); stored = r ? r.value : "2026"; } catch {}
+    try {
+      const rows = await sb.query("location_pins", `?location=eq.${encodeURIComponent(session.location)}&select=pin`);
+      if (rows && rows.length > 0) stored = rows[0].pin;
+    } catch {}
     if (curPin !== stored) { setMsg({text:t.pinWrong, ok:false}); return; }
-    await window.storage.set(`pin-${session.location}`, newPin1);
+    try {
+      await sb.update("location_pins", null, { pin: newPin1, updated_at: new Date().toISOString() });
+      // Use upsert via insert with onConflict
+      await fetch(`${SUPABASE_URL}/rest/v1/location_pins?location=eq.${encodeURIComponent(session.location)}`, {
+        method: "PATCH",
+        headers: { ...sb.headers },
+        body: JSON.stringify({ pin: newPin1 })
+      });
+    } catch {}
     setMsg({text:t.pinChanged, ok:true}); setCurPin(""); setNewPin1(""); setNewPin2("");
   };
 
@@ -770,8 +870,8 @@ function GroupDashboard({ th, t, lang }) {
       const result = {};
       for (const loc of LOCATIONS) {
         try {
-          const r = await window.storage.get(`crm-deals-${loc}`);
-          result[loc] = r ? JSON.parse(r.value) : [];
+          const rows = await sb.query("deals", `?location=eq.${encodeURIComponent(loc)}&order=updated_at.desc`);
+          result[loc] = rows.map(rowToDeal);
         } catch { result[loc] = []; }
       }
       setAllData(result);
@@ -1082,6 +1182,105 @@ function GroupDashboard({ th, t, lang }) {
   );
 }
 
+
+// ─── Attachments Panel ────────────────────────────────────────────────────────
+function AttachmentsPanel({ dealId, th, t }) {
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState(null);
+  const inputRef = useRef(null);
+
+  const load = async () => {
+    if (!dealId) return;
+    try {
+      const rows = await sb.query("attachments", `?deal_id=eq.${dealId}&order=uploaded_at.desc`);
+      setFiles(rows || []);
+    } catch(e) { setErr(e.message); }
+  };
+
+  useEffect(() => { load(); }, [dealId]);
+
+  const upload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { setErr("Max file size is 10 MB"); return; }
+    setUploading(true); setErr(null);
+    try {
+      const path = `${dealId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
+      await sb.uploadFile(path, file);
+      await sb.insert("attachments", {
+        deal_id: dealId, file_name: file.name,
+        file_size: file.size, file_type: file.type, storage_path: path
+      });
+      await load();
+    } catch(e) { setErr("Upload failed: "+e.message); }
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const open = async (att) => {
+    try {
+      const url = await sb.signedUrl(att.storage_path);
+      window.open(url, "_blank");
+    } catch(e) { setErr("Cannot open file: "+e.message); }
+  };
+
+  const remove = async (att) => {
+    if (!confirm(`Delete "${att.file_name}"?`)) return;
+    try {
+      await sb.deleteFile(att.storage_path);
+      await sb.delete("attachments", att.id);
+      setFiles(f => f.filter(x => x.id !== att.id));
+    } catch(e) { setErr(e.message); }
+  };
+
+  const fmtSize = (b) => b > 1024*1024 ? (b/1024/1024).toFixed(1)+" MB" : b > 1024 ? (b/1024).toFixed(0)+" KB" : b+" B";
+  const fileIcon = (type) => {
+    if (type?.includes("pdf")) return "📄";
+    if (type?.includes("sheet") || type?.includes("excel") || type?.includes("csv")) return "📊";
+    if (type?.includes("image")) return "🖼️";
+    if (type?.includes("word")) return "📝";
+    return "📎";
+  };
+
+  return (
+    <div style={{ marginTop:10, borderTop:`1px solid ${th.border}`, paddingTop:10 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+        <span style={{ fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".05em", fontWeight:600 }}>
+          📎 Attachments {files.length > 0 ? `(${files.length})` : ""}
+        </span>
+        <button onClick={() => inputRef.current?.click()} disabled={uploading}
+          style={{ fontSize:11, padding:"3px 10px", borderRadius:6, border:`1px solid ${th.border}`, background:"none", color:"#3B82F6", cursor:"pointer", fontWeight:600 }}>
+          {uploading ? "⏳ Uploading…" : "+ Add file"}
+        </button>
+        <input ref={inputRef} type="file" onChange={upload} style={{ display:"none" }}
+          accept=".pdf,.xlsx,.xls,.csv,.doc,.docx,.png,.jpg,.jpeg" />
+      </div>
+      {err && <div style={{ fontSize:11, color:"#EF4444", marginBottom:6 }}>{err}</div>}
+      {files.length === 0 && !uploading && (
+        <div style={{ fontSize:12, color:th.muted, fontStyle:"italic" }}>No attachments yet</div>
+      )}
+      {files.map(att => (
+        <div key={att.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 8px", borderRadius:7, background:th.surface2, border:`1px solid ${th.border}`, marginBottom:5 }}>
+          <span style={{ fontSize:16 }}>{fileIcon(att.file_type)}</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:12, fontWeight:600, color:th.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{att.file_name}</div>
+            <div style={{ fontSize:10, color:th.muted }}>{fmtSize(att.file_size)} · {new Date(att.uploaded_at).toLocaleDateString()}</div>
+          </div>
+          <button onClick={() => open(att)}
+            style={{ fontSize:11, padding:"3px 9px", borderRadius:5, border:`1px solid #3B82F644`, background:"#3B82F611", color:"#3B82F6", cursor:"pointer", fontWeight:600, flexShrink:0 }}>
+            Open
+          </button>
+          <button onClick={() => remove(att)}
+            style={{ fontSize:11, padding:"3px 8px", borderRadius:5, border:`1px solid #EF444433`, background:"none", color:"#EF4444", cursor:"pointer", flexShrink:0 }}>
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── SparkBar ─────────────────────────────────────────────────────────────────
 function SparkBar({ values, colors, maxVal }) {
   return (
@@ -1111,43 +1310,61 @@ export default function App() {
 
   const t = T[lang];
 
-  const storageKey = session ? `crm-deals-${session.location}` : null;
-
+  // ── Supabase data loading ──────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return;
     setLoaded(false);
     (async () => {
-      try { const r = await window.storage.get(storageKey); setDeals(r ? JSON.parse(r.value) : SAMPLE_DEALS(session.location)); }
-      catch { setDeals(SAMPLE_DEALS(session.location)); }
+      try {
+        const rows = await sb.query("deals", `?location=eq.${encodeURIComponent(session.location)}&order=updated_at.desc`);
+        setDeals(rows.length > 0 ? rows.map(rowToDeal) : []);
+      } catch (e) {
+        console.error("Load error:", e);
+        setDeals([]);
+      }
       setLoaded(true);
     })();
   }, [session]);
 
-  useEffect(() => {
-    if (!loaded || !storageKey) return;
-    window.storage.set(storageKey, JSON.stringify(deals)).catch(()=>{});
-  }, [deals, loaded]);
-
   const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(null), 2500); };
 
-  const saveDeal = useCallback((form) => {
-    setDeals(ds => form.id ? ds.map(d => d.id===form.id ? {...form, updated:today()} : d)
-      : [...ds, {...form, id:Date.now(), created:today(), updated:today()}]);
+  const saveDeal = useCallback(async (form) => {
+    try {
+      if (form.id) {
+        const row = dealToRow(form, session.location);
+        await sb.update("deals", form.id, row);
+        setDeals(ds => ds.map(d => d.id===form.id ? {...form, updated:today()} : d));
+        showToast(t.edit+" ✓");
+      } else {
+        const row = { ...dealToRow(form, session.location), created_at: today() };
+        const result = await sb.insert("deals", row);
+        const newDeal = rowToDeal(result[0]);
+        setDeals(ds => [newDeal, ...ds]);
+        showToast(t.newLead+" ✓");
+      }
+    } catch(e) { showToast("Error saving: "+e.message); }
     setModal(null);
-    showToast(form.id ? t.edit+" ✓" : t.newLead+" ✓");
+  }, [session, lang]);
+
+  const changeStage = useCallback(async (id, stage) => {
+    const prob = stage==="Won"?100:stage==="Lost"?0:undefined;
+    const update = { stage, updated_at: today(), ...(prob!==undefined ? {probability:prob} : {}) };
+    try {
+      await sb.update("deals", id, update);
+      setDeals(ds => ds.map(d => d.id===id ? {...d, stage, updated:today(), ...(prob!==undefined?{probability:prob}:{})} : d));
+      showToast(`→ ${stageLabel(stage, lang)}`);
+    } catch(e) { showToast("Error: "+e.message); }
   }, [lang]);
 
-  const changeStage = useCallback((id, stage) => {
-    setDeals(ds => ds.map(d => d.id===id ? {...d, stage, updated:today(), probability: stage==="Won"?100:stage==="Lost"?0:d.probability} : d));
-    showToast(`→ ${stageLabel(stage, lang)}`);
-  }, [lang]);
-
-  const deleteDeal = useCallback((id) => {
+  const deleteDeal = useCallback(async (id) => {
     if (!confirm(t.delete + "?")) return;
-    setDeals(ds => ds.filter(d => d.id!==id));
+    try {
+      await sb.delete("deals", id);
+      setDeals(ds => ds.filter(d => d.id!==id));
+    } catch(e) { showToast("Error: "+e.message); }
   }, [lang]);
 
-  const owners = session ? [...new Set([session.name, ...SAMPLE_DEALS(session.location).map(d=>d.owner)])] : [];
+  const owners = session ? [...new Set([session.name, ...deals.map(d=>d.owner).filter(Boolean)])] : [session?.name||''].filter(Boolean);
 
   // Filtered
   const filtered = deals.filter(d => {
