@@ -73,7 +73,7 @@ const rowToDeal = (r) => ({
   id: r.id, name: r.name, company: r.company, value: Number(r.value),
   stage: r.stage, owner: r.owner, probability: r.probability,
   source: r.source||"", notes: r.notes||"", goLive: r.go_live||"",
-  lostReason: r.lost_reason||"", created: r.created_at, updated: r.updated_at,
+  lostReason: r.lost_reason||"", created: r.created_at||today(), updated: r.updated_at||today(),
 });
 
 // App deal → DB row
@@ -88,7 +88,23 @@ const dealToRow = (d, location) => ({
 // ─── Locations ────────────────────────────────────────────────────────────────
 const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
 const LOCATION_FLAGS = { Altenkundstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
-const Flag = ({ loc, size=16 }) => <span className={`fi fi-${LOCATION_FLAGS[loc]||"un"}`} style={{ width:size*1.33, height:size, display:"inline-block", verticalAlign:"middle", borderRadius:2, marginRight:5, flexShrink:0 }} />;
+
+const FLAG_SVGS = {
+  de: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 3" width="${w}" height="${h}"><rect width="5" height="1" y="0" fill="#000"/><rect width="5" height="1" y="1" fill="#D00"/><rect width="5" height="1" y="2" fill="#FFCE00"/></svg>`,
+  ch: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${w}" height="${h}"><rect width="32" height="32" fill="#FF0000"/><rect x="13" y="6" width="6" height="20" fill="#fff"/><rect x="6" y="13" width="20" height="6" fill="#fff"/></svg>`,
+  it: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" width="${w}" height="${h}"><rect width="1" height="2" fill="#009246"/><rect width="1" height="2" x="1" fill="#fff"/><rect width="1" height="2" x="2" fill="#CE2B37"/></svg>`,
+  cz: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 4" width="${w}" height="${h}"><rect width="6" height="2" fill="#fff"/><rect width="6" height="2" y="2" fill="#D7141A"/><polygon points="0,0 3,2 0,4" fill="#11457E"/></svg>`,
+  us: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 40" width="${w}" height="${h}"><rect width="76" height="40" fill="#B22234"/>${[1,3,5,7,9,11].map(i=>`<rect width="76" height="3.08" y="${i*3.08}" fill="#fff"/>`).join("")}<rect width="30" height="21.5" fill="#3C3B6E"/></svg>`,
+};
+
+const Flag = ({ loc, size=16 }) => {
+  const code = LOCATION_FLAGS[loc] || "de";
+  const svgFn = FLAG_SVGS[code];
+  if (!svgFn) return null;
+  const w = Math.round(size * 1.5);
+  const h = size;
+  return <span dangerouslySetInnerHTML={{__html: svgFn(w,h)}} style={{ display:"inline-block", verticalAlign:"middle", marginRight:5, borderRadius:2, overflow:"hidden", flexShrink:0, lineHeight:0 }} />;
+};
 
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
@@ -542,8 +558,8 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
 // ─── Deal Modal ───────────────────────────────────────────────────────────────
 function DealModal({ deal, onSave, onClose, lang, owners, th }) {
   const t = T[lang];
-  const blank = { id:null, name:"", company:"", value:"", stage:"New Lead", owner:owners[0]||"", probability:20, notes:"", goLive:"", source:"Website / Web Form", lostReason:"" };
-  const [form, setForm] = useState(deal ?? blank);
+  const blank = { id:null, name:"", company:"", value:"", stage:"New Lead", owner:owners[0]||"", probability:20, notes:"", goLive:"", source:"Website / Web Form", lostReason:"", created:today() };
+  const [form, setForm] = useState(deal ? { ...deal, created: deal.created||today() } : blank);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
   const field = (label, key, type="text") => (
@@ -561,6 +577,11 @@ function DealModal({ deal, onSave, onClose, lang, owners, th }) {
         <h3 style={{ margin:"0 0 22px", color:th.text, fontSize:18, fontWeight:700 }}>{deal ? t.editLead : t.addLead}</h3>
         {field(t.dealName, "name")}
         {field(t.company, "company")}
+        <div style={{ marginBottom:14 }}>
+          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.created} 📅</label>
+          <input type="date" value={form.created||today()} onChange={e => set("created", e.target.value)}
+            style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14, boxSizing:"border-box", outline:"none" }} />
+        </div>
         {field(t.value, "value", "number")}
         <div style={{ marginBottom:14 }}>
           <label style={{ display:"block", fontSize:11, color:"#4B6280", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.stage}</label>
@@ -1339,12 +1360,12 @@ export default function App() {
   const saveDeal = useCallback(async (form) => {
     try {
       if (form.id) {
-        const row = dealToRow(form, session.location);
+        const row = { ...dealToRow(form, session.location), created_at: form.created || today() };
         await sb.update("deals", form.id, row);
         setDeals(ds => ds.map(d => d.id===form.id ? {...form, updated:today()} : d));
         showToast(t.edit+" ✓");
       } else {
-        const row = { ...dealToRow(form, session.location), created_at: today() };
+        const row = { ...dealToRow(form, session.location), created_at: form.created || today() };
         const result = await sb.insert("deals", row);
         const newDeal = rowToDeal(result[0]);
         setDeals(ds => [newDeal, ...ds]);
