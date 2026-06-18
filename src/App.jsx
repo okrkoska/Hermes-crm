@@ -63,7 +63,7 @@ const T = {
     pinMismatch: "New PINs do not match.", pinWrong: "Current PIN is incorrect.",
     pinInvalid: "PIN must be exactly 4 digits.",
     language: "Language", locationLabel: "Location",
-    signOut: "Sign out", loggedInAs: "Logged in as", themeLabel: "Appearance", themeLight: "☀️ Light (Day)", themeDark: "🌙 Dark (Night)", groupDash: "Group", groupTitle: "Group Dashboard", groupSub: "All locations combined", loading: "Loading data…", noData: "No data yet", goLive: "Go Live (Month)", timeline: "Timeline", noGoLive: "No date set",
+    signOut: "Sign out", loggedInAs: "Logged in as", themeLabel: "Appearance", themeLight: "☀️ Light (Day)", themeDark: "🌙 Dark (Night)", groupDash: "Group", groupTitle: "Group Dashboard", groupSub: "All locations combined", loading: "Loading data…", noData: "No data yet", goLive: "Go Live", timeline: "Timeline", noGoLive: "No date", source: "Lead Source", bySource: "Leads by Source", lostReason: "Lost Reason", lostReasonPlaceholder: "Why was this deal lost?",
     likelyLabel: "likely", successCloseMsg: "Successfully closed!",
     stagesShort: ["New", "Qual.", "Prop.", "Neg."],
   },
@@ -92,12 +92,21 @@ const T = {
     pinMismatch: "Neue PINs stimmen nicht überein.", pinWrong: "Aktueller PIN ist falsch.",
     pinInvalid: "PIN muss genau 4 Ziffern haben.",
     language: "Sprache", locationLabel: "Standort",
-    signOut: "Abmelden", loggedInAs: "Angemeldet als", themeLabel: "Darstellung", themeLight: "☀️ Hell (Tag)", themeDark: "🌙 Dunkel (Nacht)", groupDash: "Gruppe", groupTitle: "Group Dashboard", groupSub: "Alle Standorte zusammen", loading: "Daten werden geladen…", noData: "Noch keine Daten", goLive: "Go Live (Monat)", timeline: "Zeitachse", noGoLive: "Kein Datum",
+    signOut: "Abmelden", loggedInAs: "Angemeldet als", themeLabel: "Darstellung", themeLight: "☀️ Hell (Tag)", themeDark: "🌙 Dunkel (Nacht)", groupDash: "Gruppe", groupTitle: "Group Dashboard", groupSub: "Alle Standorte zusammen", loading: "Daten werden geladen…", noData: "Noch keine Daten", goLive: "Go Live", timeline: "Zeitachse", noGoLive: "Kein Datum", source: "Lead-Quelle", bySource: "Leads nach Quelle", lostReason: "Verlustgrund", lostReasonPlaceholder: "Warum wurde dieser Deal verloren?",
     likelyLabel: "wahrsch.", successCloseMsg: "Erfolgreich abgeschlossen!",
     stagesShort: ["Neu", "Qual.", "Ang.", "Verh."],
   }
 };
 
+
+// ─── Lead Sources ─────────────────────────────────────────────────────────────
+const SOURCES = ["Website / Web Form", "Email Campaign", "Social Media", "Cold Call", "Networking / Event", "Trade Show / Exhibition", "Partner Referral", "Customer Referral", "PR / Media", "Existing Account", "Unknown / Other"];
+const SOURCE_LABELS = {
+  en: ["Website / Web Form", "Email Campaign", "Social Media", "Cold Call", "Networking / Event", "Trade Show / Exhibition", "Partner Referral", "Customer Referral", "PR / Media", "Existing Account", "Unknown / Other"],
+  de: ["Website / Webformular", "E-Mail Kampagne", "Social Media", "Kaltakquise", "Networking / Event", "Messe / Ausstellung", "Partner-Empfehlung", "Kunden-Empfehlung", "PR / Medien", "Bestandskunde", "Unbekannt / Sonstiges"],
+};
+const SOURCE_ICONS = ["🌐", "📧", "📣", "📞", "🤝", "🏛️", "🔗", "👥", "📰", "🏢", "❓"];
+const SOURCE_COLORS = ["#3B82F6", "#6366F1", "#EC4899", "#F59E0B", "#10B981", "#F97316", "#8B5CF6", "#14B8A6", "#64748B", "#0EA5E9", "#94A3B8"];
 // ─── Stages (always EN keys, display translated) ──────────────────────────────
 const STAGES = ["New Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
 const STAGE_META = [
@@ -121,17 +130,17 @@ const stageMeta = (s) => STAGE_META[stageIdx(s)] ?? STAGE_META[0];
 const stageLabel = (s, lang) => { const i = stageIdx(s); return i >= 0 ? STAGE_LABELS[lang][i] : s; };
 
 const SAMPLE_DEALS = (loc) => [
-  { id: 1, name: "Office Renovation", company: "BuildCorp GmbH", value: 45000, stage: "Negotiation", owner: "Jana N.", created: "2026-04-10", updated: "2026-06-01", probability: 70, notes: "Waiting for contract.", goLive: "2026-09" },
-  { id: 2, name: "IT Infrastructure", company: "TechCorp AG", value: 82000, stage: "Proposal", owner: "Tom K.", created: "2026-05-02", updated: "2026-06-05", probability: 45, notes: "Send revised quote.", goLive: "2026-11" },
-  { id: 3, name: "Q3 Marketing", company: "Brand Studio", value: 12000, stage: "Qualified", owner: "Alex R.", created: "2026-05-20", updated: "2026-06-08", probability: 30, notes: "", goLive: "2026-08" },
-  { id: 4, name: "Packaging Line", company: "Pack EU", value: 29000, stage: "Won", owner: "Petra M.", created: "2026-03-15", updated: "2026-05-28", probability: 100, notes: "Successfully closed!", goLive: "2026-07" },
-  { id: 5, name: "Cloud Migration", company: "FinServe Inc.", value: 31000, stage: "New Lead", owner: "Jana N.", created: "2026-06-12", updated: "2026-06-12", probability: 10, notes: "Inbound inquiry.", goLive: "2026-12" },
+  { id: 1, name: "Office Renovation", company: "BuildCorp GmbH", value: 45000, stage: "Negotiation", owner: "Jana N.", created: "2026-04-10", updated: "2026-06-01", probability: 70, notes: "Waiting for contract.", goLive: "2026-09", source: "Customer Referral" },
+  { id: 2, name: "IT Infrastructure", company: "TechCorp AG", value: 82000, stage: "Proposal", owner: "Tom K.", created: "2026-05-02", updated: "2026-06-05", probability: 45, notes: "Send revised quote.", goLive: "2026-11", source: "Cold Outreach" },
+  { id: 3, name: "Q3 Marketing", company: "Brand Studio", value: 12000, stage: "Qualified", owner: "Alex R.", created: "2026-05-20", updated: "2026-06-08", probability: 30, notes: "", goLive: "2026-08", source: "Website / Inbound" },
+  { id: 4, name: "Packaging Line", company: "Pack EU", value: 29000, stage: "Won", owner: "Petra M.", created: "2026-03-15", updated: "2026-05-28", probability: 100, notes: "Successfully closed!", goLive: "2026-07", source: "Existing Account" },
+  { id: 5, name: "Cloud Migration", company: "FinServe Inc.", value: 31000, stage: "New Lead", owner: "Jana N.", created: "2026-06-12", updated: "2026-06-12", probability: 10, notes: "Inbound inquiry.", goLive: "2026-12", source: "Trade Show / Exhibition" },
 ];
 
 // ─── CSV Export (always EN) ───────────────────────────────────────────────────
 function exportCSV(deals, location) {
-  const headers = ["ID","Name","Company","Value (EUR)","Stage","Owner","Probability (%)","Go Live","Location","Created","Updated","Notes"];
-  const rows = deals.map(d => [d.id, `"${d.name}"`, `"${d.company}"`, d.value, d.stage, d.owner, d.probability, d.goLive||"", location, d.created, d.updated, `"${(d.notes||"").replace(/"/g,'""')}"`]);
+  const headers = ["ID","Name","Company","Value (EUR)","Stage","Owner","Probability (%)","Source","Go Live","Lost Reason","Location","Created","Updated","Notes"];
+  const rows = deals.map(d => [d.id, `"${d.name}"`, `"${d.company}"`, d.value, d.stage, d.owner, d.probability, d.source||"", d.goLive||"", `"${(d.lostReason||"").replace(/"/g,'""')} "`, location, d.created, d.updated, `"${(d.notes||"").replace(/"/g,'""')}"`]);
   const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
   const blob = new Blob(["\uFEFF"+csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -316,7 +325,7 @@ function StageProgress({ stage, onChange, lang, th }) {
           return (
             <div key={s} style={{ display:"flex", alignItems:"center", flex: i < 3 ? 1 : "none" }}>
               <button onClick={() => onChange(s)} title={stageLabel(s,lang)}
-                style={{ width:26, height:26, borderRadius:"50%", border:`2px solid ${now ? sm.color : done ? sm.color : "#1E3A5F"}`,
+                style={{ width:26, height:26, borderRadius:"50%", border:`2px solid ${now ? sm.color : done ? sm.color : th.border}`,
                   background: done ? sm.color : th.surface2, color: done ? "#fff" : th.muted,
                   cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
                   fontSize:10, fontWeight:700, flexShrink:0,
@@ -328,9 +337,9 @@ function StageProgress({ stage, onChange, lang, th }) {
           );
         })}
       </div>
-      <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginTop:5 }}>
         {t.stagesShort.map((s,i) => (
-          <span key={i} style={{ fontSize:8, color: !isTerminal && i === idx ? STAGE_META[i].color : th.muted, textTransform:"uppercase", letterSpacing:".05em", fontWeight: i === idx ? 700 : 400, flex:1, textAlign: i===0?"left":i===3?"right":"center" }}>{s}</span>
+          <span key={i} style={{ fontSize:9, color: !isTerminal && i === idx ? STAGE_META[i].color : th.text2, textTransform:"uppercase", letterSpacing:".04em", fontWeight: i === idx ? 800 : 400, flex:1, textAlign: i===0?"left":i===3?"right":"center" }}>{s}</span>
         ))}
       </div>
       {isTerminal && (
@@ -367,11 +376,38 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
         <div style={{ marginBottom:10 }}>
           <StageProgress stage={deal.stage} onChange={s => onStageChange(deal.id, s)} lang={lang} th={th} />
         </div>
-        <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:6 }}>
-          <span style={{ fontSize:11, padding:"3px 9px", borderRadius:8, background:"#1E3A5F", color:"#94A3B8" }}>{deal.owner}</span>
-          <span style={{ fontSize:11, color:"#334155" }}>{deal.probability}% {t.likelyLabel}</span>
-          <button onClick={() => setExpanded(e=>!e)} style={{ marginLeft:"auto", background:"none", border:"none", color:"#334155", fontSize:13, cursor:"pointer", padding:"0 4px" }}>{expanded?"▲":"▼"}</button>
-        </div>
+        {/* Date strip — Design B */}
+        {(() => {
+          const created = deal.created ? new Date(deal.created).toLocaleDateString("en-US",{month:"short",year:"numeric"}) : null;
+          const goLiveDate = deal.goLive ? new Date(deal.goLive+"-01") : null;
+          const goLiveStr = goLiveDate ? goLiveDate.toLocaleDateString("en-US",{month:"short",year:"numeric"}) : null;
+          const createdDate = deal.created ? new Date(deal.created) : null;
+          const monthsDiff = (goLiveDate && createdDate) ? Math.round((goLiveDate - createdDate)/(1000*60*60*24*30)) : null;
+          const si = SOURCES.indexOf(deal.source||"");
+          const srcColor = si>=0 ? SOURCE_COLORS[si] : "#64748B";
+          const srcIcon = si>=0 ? SOURCE_ICONS[si] : "❓";
+          const srcLabel = si>=0 ? SOURCE_LABELS[lang][si] : (deal.source||"");
+          return (
+            <>
+              {(created || goLiveStr) && (
+                <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8, padding:"5px 10px", background:th.surface2, borderRadius:7, border:`1px solid ${th.border}`, fontSize:12 }}>
+                  <span style={{ color:th.muted }}>📅 {created||"—"}</span>
+                  <span style={{ color:th.muted, fontSize:10 }}>→</span>
+                  <span style={{ color:"#3B82F6", fontWeight:600 }}>🚀 {goLiveStr||t.noGoLive}</span>
+                  {monthsDiff!==null && <span style={{ marginLeft:"auto", fontSize:11, color:th.muted }}>{monthsDiff}m</span>}
+                </div>
+              )}
+              <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:6 }}>
+                <span style={{ fontSize:11, padding:"2px 8px", borderRadius:8, background:th.border, color:th.text2 }}>{deal.owner}</span>
+                {deal.source && (
+                  <span style={{ fontSize:11, padding:"2px 8px", borderRadius:8, background:srcColor+"18", color:srcColor, border:`1px solid ${srcColor}33`, fontWeight:600 }}>{srcIcon} {srcLabel}</span>
+                )}
+                <span style={{ marginLeft:"auto", fontSize:11, color:th.muted }}>{deal.probability}%</span>
+                <button onClick={() => setExpanded(e=>!e)} style={{ background:"none", border:"none", color:th.muted, fontSize:13, cursor:"pointer", padding:"0 2px" }}>{expanded?"▲":"▼"}</button>
+              </div>
+            </>
+          );
+        })()}
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={() => onEdit(deal)}
             style={{ flex:1, padding:"8px 0", borderRadius:7, border:"1px solid #3B82F6", background:"#3B82F611", color:"#3B82F6", fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
@@ -392,13 +428,13 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
               <button onClick={() => onStageChange(deal.id,"Won")} style={{ flex:1, padding:"5px 0", borderRadius:6, border:"1px solid #10B98144", background: deal.stage==="Won"?"#10B98122":"none", color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markWon}</button>
               <button onClick={() => onStageChange(deal.id,"Lost")} style={{ flex:1, padding:"5px 0", borderRadius:6, border:"1px solid #EF444444", background: deal.stage==="Lost"?"#EF444422":"none", color:"#EF4444", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markLost}</button>
             </div>
-            {deal.goLive && (
-              <div style={{ display:"inline-flex", alignItems:"center", gap:6, marginTop:6, padding:"4px 10px", borderRadius:8, background:"#3B82F622", border:"1px solid #3B82F644" }}>
-                <span style={{ fontSize:12 }}>📅</span>
-                <span style={{ fontSize:12, color:"#3B82F6", fontWeight:600 }}>Go Live: {deal.goLive ? new Date(deal.goLive+"-01").toLocaleDateString("en-US",{month:"long",year:"numeric"}) : ""}</span>
+            {deal.stage === "Lost" && deal.lostReason && (
+              <div style={{ padding:"8px 10px", borderRadius:7, background:"#EF444408", border:"1px solid #EF444433", marginBottom:6 }}>
+                <div style={{ fontSize:10, color:"#EF4444", textTransform:"uppercase", letterSpacing:".05em", marginBottom:3, fontWeight:600 }}>❌ {t.lostReason}</div>
+                <div style={{ fontSize:12, color:th.text }}>{deal.lostReason}</div>
               </div>
             )}
-            {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic", marginTop:6 }}>"{deal.notes}"</div>}
+            {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic" }}>"{deal.notes}"</div>}
           </div>
         )}
       </div>
@@ -409,7 +445,7 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
 // ─── Deal Modal ───────────────────────────────────────────────────────────────
 function DealModal({ deal, onSave, onClose, lang, owners, th }) {
   const t = T[lang];
-  const blank = { id:null, name:"", company:"", value:"", stage:"New Lead", owner:owners[0]||"", probability:20, notes:"", goLive:"" };
+  const blank = { id:null, name:"", company:"", value:"", stage:"New Lead", owner:owners[0]||"", probability:20, notes:"", goLive:"", source:"Website / Web Form", lostReason:"" };
   const [form, setForm] = useState(deal ?? blank);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
@@ -452,10 +488,30 @@ function DealModal({ deal, onSave, onClose, lang, owners, th }) {
           <textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={2}
             style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14, resize:"vertical", boxSizing:"border-box" }} />
         </div>
-        <div style={{ marginBottom:18 }}>
+        {form.stage === "Lost" && (
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:"block", fontSize:11, color:"#EF4444", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>❌ {t.lostReason}</label>
+            <textarea value={form.lostReason||""} onChange={e => set("lostReason", e.target.value)} rows={2}
+              placeholder={t.lostReasonPlaceholder}
+              style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:"1px solid #EF444466", background:"#EF444408", color:th.text, fontSize:14, resize:"vertical", boxSizing:"border-box", outline:"none" }} />
+          </div>
+        )}
+        <div style={{ marginBottom:14 }}>
           <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.goLive} 📅</label>
           <input type="month" value={form.goLive||""} onChange={e => set("goLive", e.target.value)}
             style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14, boxSizing:"border-box", outline:"none" }} />
+        </div>
+        <div style={{ marginBottom:18 }}>
+          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.source}</label>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+            {SOURCES.map((s,i) => (
+              <button key={s} onClick={() => set("source", s)}
+                style={{ padding:"8px 10px", borderRadius:7, border:`2px solid ${form.source===s ? SOURCE_COLORS[i] : th.border}`, background: form.source===s ? SOURCE_COLORS[i]+"18" : th.inputBg, color: form.source===s ? SOURCE_COLORS[i] : th.muted, fontSize:12, fontWeight: form.source===s ? 700 : 400, cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:6 }}>
+                <span>{SOURCE_ICONS[i]}</span>
+                <span>{SOURCE_LABELS[lang][i]}</span>
+              </button>
+            ))}
+          </div>
         </div>
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
           <button onClick={onClose} style={{ padding:"8px 18px", borderRadius:7, border:`1px solid ${th.border}`, background:"none", color:th.muted, fontSize:14, cursor:"pointer" }}>{t.cancel}</button>
@@ -1298,6 +1354,30 @@ export default function App() {
                   </div>
                 );
               })}
+
+            {/* By Source report */}
+            <div style={{ background:th.surface, borderRadius:10, padding:"18px", border:`1px solid ${th.border}`, marginTop:14 }}>
+              <div style={{ fontSize:13, fontWeight:600, color:th.muted, marginBottom:14 }}>{t.bySource}</div>
+              {SOURCES.map((s,i) => {
+                const sDeals = deals.filter(d => (d.source||"Other") === s);
+                const sVal = sDeals.reduce((sum,d)=>sum+d.value,0);
+                const maxVal = Math.max(...SOURCES.map(ss => deals.filter(d=>(d.source||"Other")===ss).reduce((sum,d)=>sum+d.value,0)),1);
+                return (
+                  <div key={s} style={{ marginBottom:12 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                      <span style={{ fontSize:12, color:th.text }}>{SOURCE_ICONS[i]} {SOURCE_LABELS["en"][i]}</span>
+                      <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+                        <span style={{ fontSize:11, padding:"1px 7px", borderRadius:8, background:SOURCE_COLORS[i]+"18", color:SOURCE_COLORS[i], fontWeight:600 }}>{sDeals.length} leads</span>
+                        <span style={{ fontSize:12, fontWeight:600, color:th.text, minWidth:80, textAlign:"right" }}>{fmtM(sVal)} EUR</span>
+                      </div>
+                    </div>
+                    <div style={{ height:6, borderRadius:3, background:th.border }}>
+                      <div style={{ height:"100%", width:(sVal/maxVal*100)+"%", borderRadius:3, background:SOURCE_COLORS[i], transition:"width .5s ease" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
             </div>
           </>
         )}
