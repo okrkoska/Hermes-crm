@@ -89,21 +89,44 @@ const dealToRow = (d, location) => ({
 const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
 const LOCATION_FLAGS = { Altenkundstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
 
-const FLAG_SVGS = {
-  de: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 3" width="${w}" height="${h}"><rect width="5" height="1" y="0" fill="#000"/><rect width="5" height="1" y="1" fill="#D00"/><rect width="5" height="1" y="2" fill="#FFCE00"/></svg>`,
-  ch: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${w}" height="${h}"><rect width="32" height="32" fill="#FF0000"/><rect x="13" y="6" width="6" height="20" fill="#fff"/><rect x="6" y="13" width="20" height="6" fill="#fff"/></svg>`,
-  it: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" width="${w}" height="${h}"><rect width="1" height="2" fill="#009246"/><rect width="1" height="2" x="1" fill="#fff"/><rect width="1" height="2" x="2" fill="#CE2B37"/></svg>`,
-  cz: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 4" width="${w}" height="${h}"><rect width="6" height="2" fill="#fff"/><rect width="6" height="2" y="2" fill="#D7141A"/><polygon points="0,0 3,2 0,4" fill="#11457E"/></svg>`,
-  us: (w,h) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 40" width="${w}" height="${h}"><rect width="76" height="40" fill="#B22234"/>${[1,3,5,7,9,11].map(i=>`<rect width="76" height="3.08" y="${i*3.08}" fill="#fff"/>`).join("")}<rect width="30" height="21.5" fill="#3C3B6E"/></svg>`,
-};
+const FlagDE = ({w,h}) => (
+  <svg viewBox="0 0 5 3" width={w} height={h}><rect width="5" height="1" y="0" fill="#000"/><rect width="5" height="1" y="1" fill="#DD0000"/><rect width="5" height="1" y="2" fill="#FFCE00"/></svg>
+);
+const FlagCH = ({w,h}) => (
+  <svg viewBox="0 0 20 20" width={w} height={h}><rect width="20" height="20" fill="#FF0000"/><rect x="8.5" y="3" width="3" height="14" fill="#fff"/><rect x="3" y="8.5" width="14" height="3" fill="#fff"/></svg>
+);
+const FlagIT = ({w,h}) => (
+  <svg viewBox="0 0 3 2" width={w} height={h}><rect width="1" height="2" fill="#009246"/><rect width="1" height="2" x="1" fill="#fff"/><rect width="1" height="2" x="2" fill="#CE2B37"/></svg>
+);
+const FlagCZ = ({w,h}) => (
+  <svg viewBox="0 0 6 4" width={w} height={h}><rect width="6" height="2" fill="#fff"/><rect width="6" height="2" y="2" fill="#D7141A"/><polygon points="0,0 3,2 0,4" fill="#11457E"/></svg>
+);
+const FlagUS = ({w,h}) => (
+  <svg viewBox="0 0 19 10" width={w} height={h}>
+    <rect width="19" height="10" fill="#B22234"/>
+    <rect width="19" height="0.77" y="0.77" fill="#fff"/>
+    <rect width="19" height="0.77" y="2.31" fill="#fff"/>
+    <rect width="19" height="0.77" y="3.85" fill="#fff"/>
+    <rect width="19" height="0.77" y="5.38" fill="#fff"/>
+    <rect width="19" height="0.77" y="6.92" fill="#fff"/>
+    <rect width="19" height="0.77" y="8.46" fill="#fff"/>
+    <rect width="7.5" height="5.38" fill="#3C3B6E"/>
+  </svg>
+);
+
+const FLAG_MAP = { de: FlagDE, ch: FlagCH, it: FlagIT, cz: FlagCZ, us: FlagUS };
 
 const Flag = ({ loc, size=16 }) => {
   const code = LOCATION_FLAGS[loc] || "de";
-  const svgFn = FLAG_SVGS[code];
-  if (!svgFn) return null;
+  const FlagComp = FLAG_MAP[code];
+  if (!FlagComp) return null;
   const w = Math.round(size * 1.5);
   const h = size;
-  return <span dangerouslySetInnerHTML={{__html: svgFn(w,h)}} style={{ display:"inline-block", verticalAlign:"middle", marginRight:5, borderRadius:2, overflow:"hidden", flexShrink:0, lineHeight:0 }} />;
+  return (
+    <span style={{ display:"inline-flex", alignItems:"center", verticalAlign:"middle", marginRight:5, borderRadius:2, overflow:"hidden", flexShrink:0, lineHeight:0 }}>
+      <FlagComp w={w} h={h} />
+    </span>
+  );
 };
 
 
@@ -362,7 +385,7 @@ function LoginScreen({ onLogin, lang, setLang }) {
                 {LOCATIONS.map(loc => (
                   <button key={loc} onClick={() => { setLocation(loc); setErr(""); }}
                     style={{ padding:"10px 8px", borderRadius:8, border:`2px solid ${location===loc?"#2563EB":"#BFDBFE"}`, background: location===loc?"#DBEAFE":"#F8FAFC", color: location===loc?"#1E3A8A":"#64748B", fontSize:12, fontWeight: location===loc?700:400, cursor:"pointer", transition:"all .15s", textAlign:"left" }}>
-                    <span style={{ fontSize:16, marginRight:6 }}>{LOCATION_FLAGS[loc]}</span>{loc}
+                    <Flag loc={loc} size={16} />{loc}
                   </button>
                 ))}
               </div>
