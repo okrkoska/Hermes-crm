@@ -225,13 +225,13 @@ const T = {
 
 
 // ─── Lead Sources ─────────────────────────────────────────────────────────────
-const SOURCES = ["Website / Web Form", "Email Campaign", "Social Media", "Cold Call", "Networking / Event", "Trade Show / Exhibition", "Partner Referral", "Customer Referral", "PR / Media", "Existing Account", "Unknown / Other"];
+const SOURCES = ["Website / Web Form", "Email Campaign", "Social Media", "Cold Call", "Networking / Event", "Trade Show / Exhibition", "Partner Referral", "Customer Referral", "PR / Media", "Existing Account", "Tender", "Unknown / Other"];
 const SOURCE_LABELS = {
-  en: ["Website / Web Form", "Email Campaign", "Social Media", "Cold Call", "Networking / Event", "Trade Show / Exhibition", "Partner Referral", "Customer Referral", "PR / Media", "Existing Account", "Unknown / Other"],
-  de: ["Website / Webformular", "E-Mail Kampagne", "Social Media", "Kaltakquise", "Networking / Event", "Messe / Ausstellung", "Partner-Empfehlung", "Kunden-Empfehlung", "PR / Medien", "Bestandskunde", "Unbekannt / Sonstiges"],
+  en: ["Website / Web Form", "Email Campaign", "Social Media", "Cold Call", "Networking / Event", "Trade Show / Exhibition", "Partner Referral", "Customer Referral", "PR / Media", "Existing Account", "Tender", "Unknown / Other"],
+  de: ["Website / Webformular", "E-Mail Kampagne", "Social Media", "Kaltakquise", "Networking / Event", "Messe / Ausstellung", "Partner-Empfehlung", "Kunden-Empfehlung", "PR / Medien", "Bestandskunde", "Ausschreibung", "Unbekannt / Sonstiges"],
 };
-const SOURCE_ICONS = ["🌐", "📧", "📣", "📞", "🤝", "🏛️", "🔗", "👥", "📰", "🏢", "❓"];
-const SOURCE_COLORS = ["#3B82F6", "#6366F1", "#EC4899", "#F59E0B", "#10B981", "#F97316", "#8B5CF6", "#14B8A6", "#64748B", "#0EA5E9", "#94A3B8"];
+const SOURCE_ICONS = ["🌐", "📧", "📣", "📞", "🤝", "🏛️", "🔗", "👥", "📰", "🏢", "📋", "❓"];
+const SOURCE_COLORS = ["#3B82F6", "#6366F1", "#EC4899", "#F59E0B", "#10B981", "#F97316", "#8B5CF6", "#14B8A6", "#64748B", "#0EA5E9", "#DC2626", "#94A3B8"];
 // ─── Stages (always EN keys, display translated) ──────────────────────────────
 const STAGES = ["New Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
 const STAGE_META = [
