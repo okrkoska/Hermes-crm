@@ -188,7 +188,7 @@ const T = {
     pinMismatch: "New PINs do not match.", pinWrong: "Current PIN is incorrect.",
     pinInvalid: "PIN must be exactly 4 digits.",
     language: "Language", locationLabel: "Location",
-    signOut: "Sign out", loggedInAs: "Logged in as", themeLabel: "Appearance", themeLight: "☀️ Light (Day)", themeDark: "🌙 Dark (Night)", groupDash: "Group", groupTitle: "Group Dashboard", groupSub: "All locations combined", loading: "Loading data…", noData: "No data yet", goLive: "Go Live", timeline: "Timeline", noGoLive: "No date", source: "Lead Source", bySource: "Leads by Source", lostReason: "Lost Reason", lostReasonPlaceholder: "Why was this deal lost?",
+    signOut: "Sign out", loggedInAs: "Logged in as", themeLabel: "Appearance", themeLight: "☀️ Light (Day)", themeDark: "🌙 Dark (Night)", groupDash: "Group", groupTitle: "Group Dashboard", groupSub: "All locations combined", loading: "Loading data…", noData: "No data yet", goLive: "Go Live", timeline: "Timeline", noGoLive: "No date", source: "Lead Source", bySource: "Leads by Source", lostReason: "Lost Reason", lostReasonPlaceholder: "Why was this deal lost?", help: "Help",
     likelyLabel: "likely", successCloseMsg: "Successfully closed!",
     stagesShort: ["New", "Qual.", "Prop.", "Neg."],
   },
@@ -217,7 +217,7 @@ const T = {
     pinMismatch: "Neue PINs stimmen nicht überein.", pinWrong: "Aktueller PIN ist falsch.",
     pinInvalid: "PIN muss genau 4 Ziffern haben.",
     language: "Sprache", locationLabel: "Standort",
-    signOut: "Abmelden", loggedInAs: "Angemeldet als", themeLabel: "Darstellung", themeLight: "☀️ Hell (Tag)", themeDark: "🌙 Dunkel (Nacht)", groupDash: "Gruppe", groupTitle: "Group Dashboard", groupSub: "Alle Standorte zusammen", loading: "Daten werden geladen…", noData: "Noch keine Daten", goLive: "Go Live", timeline: "Zeitachse", noGoLive: "Kein Datum", source: "Lead-Quelle", bySource: "Leads nach Quelle", lostReason: "Verlustgrund", lostReasonPlaceholder: "Warum wurde dieser Deal verloren?",
+    signOut: "Abmelden", loggedInAs: "Angemeldet als", themeLabel: "Darstellung", themeLight: "☀️ Hell (Tag)", themeDark: "🌙 Dunkel (Nacht)", groupDash: "Gruppe", groupTitle: "Group Dashboard", groupSub: "Alle Standorte zusammen", loading: "Daten werden geladen…", noData: "Noch keine Daten", goLive: "Go Live", timeline: "Zeitachse", noGoLive: "Kein Datum", source: "Lead-Quelle", bySource: "Leads nach Quelle", lostReason: "Verlustgrund", lostReasonPlaceholder: "Warum wurde dieser Deal verloren?", help: "Hilfe",
     likelyLabel: "wahrsch.", successCloseMsg: "Erfolgreich abgeschlossen!",
     stagesShort: ["Neu", "Qual.", "Ang.", "Verh."],
   }
@@ -593,71 +593,70 @@ function DealModal({ deal, onSave, onClose, lang, owners, th }) {
     </div>
   );
 
+  const inputStyle = { width:"100%", padding:"11px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:16, boxSizing:"border-box", outline:"none" };
+
   return (
     <div onClick={e => e.target===e.currentTarget && onClose()}
-      style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.75)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <div style={{ background:th.surface, borderRadius:12, padding:"28px", width:460, maxWidth:"96vw", maxHeight:"90vh", overflowY:"auto", border:`1px solid ${th.border}`, boxShadow:"0 24px 60px rgba(0,0,0,.4)" }}>
-        <h3 style={{ margin:"0 0 22px", color:th.text, fontSize:18, fontWeight:700 }}>{deal ? t.editLead : t.addLead}</h3>
-        {field(t.dealName, "name")}
-        {field(t.company, "company")}
-        <div style={{ marginBottom:14 }}>
-          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.created} 📅</label>
-          <input type="date" value={form.created||today()} onChange={e => set("created", e.target.value)}
-            style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14, boxSizing:"border-box", outline:"none" }} />
-        </div>
-        {field(t.value, "value", "number")}
-        <div style={{ marginBottom:14 }}>
-          <label style={{ display:"block", fontSize:11, color:"#4B6280", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.stage}</label>
-          <select value={form.stage} onChange={e => set("stage", e.target.value)}
-            style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14 }}>
-            {STAGES.map((s,i) => <option key={s} value={s}>{STAGE_LABELS[lang][i]}</option>)}
-          </select>
-        </div>
-        <div style={{ marginBottom:14 }}>
-          <label style={{ display:"block", fontSize:11, color:"#4B6280", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.owner}</label>
-          <select value={form.owner} onChange={e => set("owner", e.target.value)}
-            style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14 }}>
-            {owners.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-        <div style={{ marginBottom:14 }}>
-          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.probability} — {form.probability}%</label>
-          <input type="range" min={0} max={100} value={form.probability} onChange={e => set("probability",+e.target.value)} style={{ width:"100%", accentColor:"#3B82F6" }} />
-        </div>
-        <div style={{ marginBottom:18 }}>
-          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.notes}</label>
-          <textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={2}
-            style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14, resize:"vertical", boxSizing:"border-box" }} />
-        </div>
-        {form.stage === "Lost" && (
+      style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.75)", zIndex:200, display:"flex", alignItems:"flex-start", justifyContent:"center", overflowY:"auto", padding:"24px 12px" }}>
+      <div style={{ background:th.surface, borderRadius:12, width:460, maxWidth:"96vw", border:`1px solid ${th.border}`, boxShadow:"0 24px 60px rgba(0,0,0,.4)", display:"flex", flexDirection:"column", maxHeight:"calc(100vh - 48px)" }}>
+        <div style={{ padding:"24px 24px 4px", overflowY:"auto", flex:1 }}>
+          <h3 style={{ margin:"0 0 20px", color:th.text, fontSize:18, fontWeight:700 }}>{deal ? t.editLead : t.addLead}</h3>
+          {field(t.dealName, "name")}
+          {field(t.company, "company")}
           <div style={{ marginBottom:14 }}>
-            <label style={{ display:"block", fontSize:11, color:"#EF4444", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>❌ {t.lostReason}</label>
-            <textarea value={form.lostReason||""} onChange={e => set("lostReason", e.target.value)} rows={2}
-              placeholder={t.lostReasonPlaceholder}
-              style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:"1px solid #EF444466", background:"#EF444408", color:th.text, fontSize:14, resize:"vertical", boxSizing:"border-box", outline:"none" }} />
+            <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.created} 📅</label>
+            <input type="date" value={form.created||today()} onChange={e => set("created", e.target.value)} style={inputStyle} />
           </div>
-        )}
-        <div style={{ marginBottom:14 }}>
-          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.goLive} 📅</label>
-          <input type="month" value={form.goLive||""} onChange={e => set("goLive", e.target.value)}
-            style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:14, boxSizing:"border-box", outline:"none" }} />
-        </div>
-        <div style={{ marginBottom:18 }}>
-          <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.source}</label>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
-            {SOURCES.map((s,i) => (
-              <button key={s} onClick={() => set("source", s)}
-                style={{ padding:"8px 10px", borderRadius:7, border:`2px solid ${form.source===s ? SOURCE_COLORS[i] : th.border}`, background: form.source===s ? SOURCE_COLORS[i]+"18" : th.inputBg, color: form.source===s ? SOURCE_COLORS[i] : th.muted, fontSize:12, fontWeight: form.source===s ? 700 : 400, cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:6 }}>
-                <span>{SOURCE_ICONS[i]}</span>
-                <span>{SOURCE_LABELS[lang][i]}</span>
-              </button>
-            ))}
+          {field(t.value, "value", "number")}
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:"block", fontSize:11, color:"#4B6280", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.stage}</label>
+            <select value={form.stage} onChange={e => set("stage", e.target.value)} style={inputStyle}>
+              {STAGES.map((s,i) => <option key={s} value={s}>{STAGE_LABELS[lang][i]}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:"block", fontSize:11, color:"#4B6280", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.owner}</label>
+            <select value={form.owner} onChange={e => set("owner", e.target.value)} style={inputStyle}>
+              {owners.map(o => <option key={o}>{o}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.probability} — {form.probability}%</label>
+            <input type="range" min={0} max={100} value={form.probability} onChange={e => set("probability",+e.target.value)} style={{ width:"100%", accentColor:"#3B82F6", height:28 }} />
+          </div>
+          <div style={{ marginBottom:18 }}>
+            <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.notes}</label>
+            <textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} style={{ ...inputStyle, resize:"vertical" }} />
+          </div>
+          {form.stage === "Lost" && (
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:"block", fontSize:11, color:"#EF4444", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>❌ {t.lostReason}</label>
+              <textarea value={form.lostReason||""} onChange={e => set("lostReason", e.target.value)} rows={2}
+                placeholder={t.lostReasonPlaceholder}
+                style={{ ...inputStyle, border:"1px solid #EF444466", background:"#EF444408", resize:"vertical" }} />
+            </div>
+          )}
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.goLive} 📅</label>
+            <input type="month" value={form.goLive||""} onChange={e => set("goLive", e.target.value)} style={inputStyle} />
+          </div>
+          <div style={{ marginBottom:8 }}>
+            <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.source}</label>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+              {SOURCES.map((s,i) => (
+                <button key={s} type="button" onClick={() => set("source", s)}
+                  style={{ padding:"10px 10px", borderRadius:7, border:`2px solid ${form.source===s ? SOURCE_COLORS[i] : th.border}`, background: form.source===s ? SOURCE_COLORS[i]+"18" : th.inputBg, color: form.source===s ? SOURCE_COLORS[i] : th.muted, fontSize:13, fontWeight: form.source===s ? 700 : 400, cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:6 }}>
+                  <span>{SOURCE_ICONS[i]}</span>
+                  <span>{SOURCE_LABELS[lang][i]}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
-          <button onClick={onClose} style={{ padding:"8px 18px", borderRadius:7, border:`1px solid ${th.border}`, background:"none", color:th.muted, fontSize:14, cursor:"pointer" }}>{t.cancel}</button>
-          <button onClick={() => onSave({...form, value:+form.value})}
-            style={{ padding:"8px 22px", borderRadius:7, border:"none", background:"linear-gradient(135deg,#3B82F6,#6366F1)", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer" }}>{t.save}</button>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end", padding:"16px 24px", borderTop:`1px solid ${th.border}`, flexShrink:0 }}>
+          <button type="button" onClick={onClose} style={{ padding:"10px 18px", borderRadius:7, border:`1px solid ${th.border}`, background:"none", color:th.muted, fontSize:15, cursor:"pointer" }}>{t.cancel}</button>
+          <button type="button" onClick={() => onSave({...form, value:+form.value})}
+            style={{ padding:"10px 22px", borderRadius:7, border:"none", background:"linear-gradient(135deg,#3B82F6,#6366F1)", color:"#fff", fontSize:15, fontWeight:700, cursor:"pointer" }}>{t.save}</button>
         </div>
       </div>
     </div>
@@ -906,6 +905,170 @@ function TimelineView({ deals, th, t, lang }) {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ─── Help Component ───────────────────────────────────────────────────────────
+function HelpView({ th, t, lang }) {
+  const [open, setOpen] = useState(null);
+
+  const sections = lang === "de" ? [
+    { id:"login", icon:"🔐", title:"Anmelden", steps:[
+      { label:"1. Standort wählen", text:"Öffnen Sie den App-Link im Browser. Klicken Sie auf Ihren Standort (blauer Rahmen erscheint) und dann auf 'Weiter →'." },
+      { label:"2. Namen eingeben", text:"Geben Sie Ihren vollständigen Namen ein. Er erscheint später als Verantwortlicher bei Ihren Leads." },
+      { label:"3. PIN eingeben", text:"Tippen Sie Ihren 4-stelligen PIN auf der Zahlentastatur. Standard beim ersten Start: 2026. Die App öffnet sich automatisch nach der 4. Ziffer." },
+    ]},
+    { id:"leads", icon:"📋", title:"Leads verwalten", steps:[
+      { label:"Neuen Lead anlegen", text:"Klicken Sie auf den gestrichelten '+ New Lead'-Button. Füllen Sie alle Felder aus und klicken Sie auf 'Save lead'." },
+      { label:"Lead bearbeiten", text:"Klicken Sie auf '✏️ Bearbeiten' auf der Lead-Karte → Felder ändern → 'Save lead'." },
+      { label:"Lead löschen", text:"Klicken Sie auf '🗑 Löschen' auf der Lead-Karte und bestätigen Sie mit OK. Achtung: nicht rückgängig machbar!" },
+    ]},
+    { id:"stages", icon:"🔄", title:"Phasen (Status)", steps:[
+      { label:"New Lead 🟣", text:"Erster Kontakt, noch keine Qualifizierung." },
+      { label:"Qualified 🔵", text:"Bedarf und Budget wurden geprüft und sind realistisch." },
+      { label:"Proposal 🟡", text:"Ein Angebot wurde eingereicht." },
+      { label:"Negotiation 🩷", text:"Verhandlungen laufen — Abschluss in Sicht." },
+      { label:"Won ✓ 🟢", text:"Auftrag gewonnen! Alle Punkte grün, Wahrscheinlichkeit = 100%." },
+      { label:"Lost ✕ 🔴", text:"Auftrag verloren. Alle Punkte rot, Wahrscheinlichkeit = 0%. Verlustgrund eintragen." },
+    ]},
+    { id:"changestage", icon:"↔️", title:"Status ändern", steps:[
+      { label:"Weg A — Fortschrittspunkt", text:"Klicken Sie direkt auf einen der Punkte (1–4) im Fortschrittsbalken der Karte." },
+      { label:"Weg B — Won / Lost", text:"Karte aufklappen (▼) → '✓ Mark Won' oder '✕ Mark Lost' klicken." },
+      { label:"Weg C — Bearbeitungsformular", text:"'✏️ Bearbeiten' → Stage-Dropdown ändern → 'Save lead'." },
+    ]},
+    { id:"pin", icon:"🔑", title:"PIN ändern", steps:[
+      { label:"Settings öffnen", text:"Klicken Sie in der Navigation auf 'Settings'." },
+      { label:"Change PIN", text:"Scrollen Sie zu 'Change PIN'. Geben Sie den aktuellen PIN ein (Standard: 2026), dann zweimal den neuen PIN." },
+      { label:"Speichern", text:"Klicken Sie auf 'Change PIN'. Bei Erfolg erscheint eine grüne Bestätigung." },
+    ]},
+    { id:"dashboard", icon:"📊", title:"Dashboard verstehen", steps:[
+      { label:"Active Pipeline", text:"Gesamtwert aller offenen Leads (ohne Won/Lost)." },
+      { label:"Revenue Won", text:"Summe aller gewonnenen Deals — der tatsächliche Umsatz." },
+      { label:"Weighted Forecast", text:"Pipeline × Wahrscheinlichkeit — realistischere Prognose als die reine Summe." },
+      { label:"Conversion Rate", text:"Anteil gewonnener Deals an allen abgeschlossenen (Won + Lost)." },
+      { label:"By Source", text:"Welche Lead-Quelle bringt die meisten Deals? Wichtig für die Akquise-Planung." },
+    ]},
+    { id:"misc", icon:"⚙️", title:"Weitere Funktionen", steps:[
+      { label:"Sprache wechseln", text:"EN / DE Button oben rechts im Header — jederzeit umschaltbar." },
+      { label:"Hell/Dunkel Modus", text:"Settings → Appearance → ☀️ Light oder 🌙 Dark wählen." },
+      { label:"CSV Export", text:"'↓ CSV' Button im Header — exportiert alle Leads als Excel-kompatible Datei." },
+      { label:"Group Dashboard", text:"Navigation → 'Group' — zeigt alle Standorte zusammen mit Trend-Grafik." },
+      { label:"Timeline", text:"Navigation → 'Timeline' — alle Leads nach geplantem Go-Live-Datum auf einer Zeitachse." },
+    ]},
+  ] : [
+    { id:"login", icon:"🔐", title:"Sign In", steps:[
+      { label:"1. Select location", text:"Open the app link in your browser. Click your location (blue border appears) then click 'Continue →'." },
+      { label:"2. Enter your name", text:"Type your full name. It will appear as the responsible person on your leads." },
+      { label:"3. Enter PIN", text:"Tap your 4-digit PIN on the number pad. Default on first start: 2026. The app opens automatically after the 4th digit." },
+    ]},
+    { id:"leads", icon:"📋", title:"Managing Leads", steps:[
+      { label:"Add a new lead", text:"Click the dashed '+ New Lead' button. Fill in all fields and click 'Save lead'." },
+      { label:"Edit a lead", text:"Click '✏️ Edit' on the lead card → change fields → 'Save lead'." },
+      { label:"Delete a lead", text:"Click '🗑 Delete' on the lead card and confirm with OK. Warning: cannot be undone!" },
+    ]},
+    { id:"stages", icon:"🔄", title:"Stages", steps:[
+      { label:"New Lead 🟣", text:"First contact, not yet qualified." },
+      { label:"Qualified 🔵", text:"Need and budget have been verified as realistic." },
+      { label:"Proposal 🟡", text:"An offer has been submitted." },
+      { label:"Negotiation 🩷", text:"Negotiations are ongoing — closing soon." },
+      { label:"Won ✓ 🟢", text:"Deal won! All dots green, probability = 100%." },
+      { label:"Lost ✕ 🔴", text:"Deal lost. All dots red, probability = 0%. Enter the reason for loss." },
+    ]},
+    { id:"changestage", icon:"↔️", title:"Change Stage", steps:[
+      { label:"Way A — Progress dot", text:"Click directly on one of the dots (1–4) in the progress bar on the card." },
+      { label:"Way B — Won / Lost", text:"Expand card (▼) → click '✓ Mark Won' or '✕ Mark Lost'." },
+      { label:"Way C — Edit form", text:"'✏️ Edit' → change Stage dropdown → 'Save lead'." },
+    ]},
+    { id:"pin", icon:"🔑", title:"Change PIN", steps:[
+      { label:"Open Settings", text:"Click 'Settings' in the navigation." },
+      { label:"Change PIN section", text:"Scroll to 'Change PIN'. Enter your current PIN (default: 2026), then your new PIN twice." },
+      { label:"Save", text:"Click 'Change PIN'. A green confirmation appears on success." },
+    ]},
+    { id:"dashboard", icon:"📊", title:"Reading the Dashboard", steps:[
+      { label:"Active Pipeline", text:"Total value of all open leads (excluding Won/Lost)." },
+      { label:"Revenue Won", text:"Sum of all won deals — actual revenue generated." },
+      { label:"Weighted Forecast", text:"Pipeline × probability — more realistic forecast than the raw sum." },
+      { label:"Conversion Rate", text:"Share of won deals out of all closed deals (Won + Lost)." },
+      { label:"By Source", text:"Which lead source brings the most deals? Key for planning your outreach." },
+    ]},
+    { id:"misc", icon:"⚙️", title:"Other Features", steps:[
+      { label:"Switch language", text:"EN / DE button top-right in the header — switch at any time." },
+      { label:"Light/Dark mode", text:"Settings → Appearance → ☀️ Light or 🌙 Dark." },
+      { label:"CSV Export", text:"'↓ CSV' button in header — exports all leads as an Excel-compatible file." },
+      { label:"Group Dashboard", text:"Navigation → 'Group' — shows all locations together with trend chart." },
+      { label:"Timeline", text:"Navigation → 'Timeline' — all leads by planned Go Live date on a timeline." },
+    ]},
+  ];
+
+  return (
+    <div style={{ maxWidth:820, margin:"0 auto" }}>
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24 }}>
+        <div style={{ width:44, height:44, borderRadius:12, background:"linear-gradient(135deg,#3B82F6,#6366F1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>❓</div>
+        <div>
+          <div style={{ fontSize:18, fontWeight:800, color:th.text }}>
+            {lang==="de" ? "Benutzerhandbuch" : "User Guide"} — CRM<span style={{color:"#3B82F6"}}>flow</span>
+          </div>
+          <div style={{ fontSize:13, color:th.muted }}>
+            {lang==="de" ? "Alles was Sie zur Nutzung der App wissen müssen" : "Everything you need to know to use the app"}
+          </div>
+        </div>
+      </div>
+
+      {/* Section cards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10, marginBottom:20 }}>
+        {sections.map(s => (
+          <button key={s.id} onClick={() => setOpen(open===s.id ? null : s.id)}
+            style={{ textAlign:"left", padding:"14px 16px", borderRadius:10, border:`1.5px solid ${open===s.id?"#3B82F6":th.border}`, background: open===s.id?"#3B82F611":th.surface, cursor:"pointer", transition:"all .15s" }}>
+            <div style={{ fontSize:20, marginBottom:6 }}>{s.icon}</div>
+            <div style={{ fontSize:14, fontWeight:700, color: open===s.id?"#3B82F6":th.text }}>{s.title}</div>
+            <div style={{ fontSize:12, color:th.muted, marginTop:2 }}>{s.steps.length} {lang==="de"?"Punkte":"items"}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Expanded section */}
+      {open && (() => {
+        const sec = sections.find(s=>s.id===open);
+        return sec ? (
+          <div style={{ background:th.surface, borderRadius:12, border:`1.5px solid #3B82F6`, padding:"20px 22px", marginBottom:16 }}>
+            <div style={{ fontSize:16, fontWeight:800, color:"#3B82F6", marginBottom:16 }}>{sec.icon} {sec.title}</div>
+            {sec.steps.map((step,i) => (
+              <div key={i} style={{ display:"flex", gap:12, marginBottom:14, paddingBottom:14, borderBottom:i<sec.steps.length-1?`1px solid ${th.border}`:"none" }}>
+                <div style={{ width:24, height:24, borderRadius:"50%", background:"#3B82F622", color:"#3B82F6", fontSize:12, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:2 }}>{i+1}</div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:th.text, marginBottom:4 }}>{step.label}</div>
+                  <div style={{ fontSize:13, color:th.muted, lineHeight:1.5 }}>{step.text}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null;
+      })()}
+
+      {/* Quick reference table */}
+      <div style={{ background:th.surface, borderRadius:12, border:`1px solid ${th.border}`, overflow:"hidden" }}>
+        <div style={{ padding:"14px 18px", borderBottom:`1px solid ${th.border}`, fontSize:14, fontWeight:700, color:th.text }}>
+          ⚡ {lang==="de" ? "Schnell-Referenz" : "Quick Reference"}
+        </div>
+        {[
+          [lang==="de"?"Anmelden":"Sign in", lang==="de"?"Link → Standort → Name → PIN (2026)":"Link → Location → Name → PIN (2026)"],
+          [lang==="de"?"Neuer Lead":"New lead", lang==="de"?"+ New Lead → Formular → Save lead":"+ New Lead → Form → Save lead"],
+          [lang==="de"?"Phase ändern":"Change stage", lang==="de"?"Punkt klicken ODER ▼ → Mark Won/Lost":"Click dot OR ▼ → Mark Won/Lost"],
+          [lang==="de"?"Bearbeiten":"Edit", lang==="de"?"✏️ Bearbeiten → Ändern → Save lead":"✏️ Edit → Change → Save lead"],
+          [lang==="de"?"PIN ändern":"Change PIN", "Settings → Change PIN"],
+          [lang==="de"?"Sprache":"Language", lang==="de"?"EN / DE oben im Header":"EN / DE in top header"],
+          ["CSV Export", lang==="de"?"↓ CSV Button im Header":"↓ CSV button in header"],
+          ["Group Dashboard", lang==="de"?"Navigation → Group":"Navigation → Group"],
+        ].map(([a,b],i) => (
+          <div key={i} style={{ display:"flex", gap:12, padding:"10px 18px", background:i%2===0?th.surface2:th.surface, borderBottom:`1px solid ${th.border}` }}>
+            <div style={{ width:160, fontSize:13, fontWeight:700, color:th.text, flexShrink:0 }}>{a}</div>
+            <div style={{ fontSize:13, color:th.muted }}>{b}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1447,6 +1610,7 @@ export default function App() {
     { id:"dashboard", label: t.dashboard },
     { id:"timeline", label: t.timeline },
     { id:"group", label: t.groupDash },
+    { id:"help", label: t.help },
     { id:"settings", label: t.settings },
   ];
 
@@ -1659,6 +1823,11 @@ export default function App() {
         {/* ── GROUP DASHBOARD ── */}
         {view === "group" && (
           <GroupDashboard th={th} t={t} lang={lang} />
+        )}
+
+        {/* ── HELP ── */}
+        {view === "help" && (
+          <HelpView th={th} t={t} lang={lang} />
         )}
 
         {/* ── SETTINGS ── */}
