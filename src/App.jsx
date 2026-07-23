@@ -488,7 +488,7 @@ function StageProgress({ stage, onChange, lang, th }) {
 }
 
 // ─── Lead Card ────────────────────────────────────────────────────────────────
-function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
+function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly }) {
   const t = T[lang];
   const meta = stageMeta(deal.stage);
   const [expanded, setExpanded] = useState(false);
@@ -1773,6 +1773,9 @@ export default function App() {
   const [filterStage, setFilterStage] = useState("All");
   const [filterOwner, setFilterOwner] = useState("All");
   const [toast, setToast] = useState(null);
+  const [browseLocation, setBrowseLocation] = useState(null); // null = own location
+  const [browseDeals, setBrowseDeals] = useState([]); // deals from browsed location
+  const [browseLoading, setBrowseLoading] = useState(false);
 
   const t = T[lang];
 
@@ -1830,10 +1833,25 @@ export default function App() {
     } catch(e) { showToast("Error: "+e.message); }
   }, [lang]);
 
+  const loadBrowseLocation = async (loc) => {
+    if (!loc || loc === session.location) { setBrowseLocation(null); setBrowseDeals([]); return; }
+    setBrowseLocation(loc);
+    setBrowseLoading(true);
+    try {
+      const rows = await sb.query("deals", `?location=eq.${encodeURIComponent(loc)}&order=updated_at.desc`);
+      setBrowseDeals(rows.map(rowToDeal));
+    } catch(e) { showToast("Error loading: "+e.message); setBrowseDeals([]); }
+    setBrowseLoading(false);
+  };
+
+  const activeLoc = browseLocation || session?.location || "";
+  const activeDeals = browseLocation ? browseDeals : deals;
+  const isReadOnly = browseLocation && browseLocation !== session?.location;
+
   const owners = session ? [...new Set([session.name, ...deals.map(d=>d.owner).filter(Boolean)])] : [session?.name||''].filter(Boolean);
 
-  // Filtered
-  const filtered = deals.filter(d => {
+  // Filtered — from active location (own or browsed)
+  const filtered = activeDeals.filter(d => {
     const q = search.toLowerCase();
     return (!q || d.name.toLowerCase().includes(q) || d.company.toLowerCase().includes(q))
       && (filterStage === "All" || d.stage === filterStage)
@@ -1913,6 +1931,36 @@ export default function App() {
         {/* ── LEADS ── */}
         {view === "leads" && (
           <>
+            {/* Location switcher bar */}
+            <div style={{ display:"flex", gap:6, marginBottom:14, overflowX:"auto", paddingBottom:2 }}>
+              {LOCATIONS.map(loc => {
+                const isOwn = loc === session.location;
+                const isActive = loc === activeLoc;
+                return (
+                  <button key={loc} onClick={() => loadBrowseLocation(isOwn ? null : loc)}
+                    style={{ padding:"7px 12px", borderRadius:8, border:`1.5px solid ${isActive?"#3B82F6":th.border}`, background:isActive?"#3B82F622":th.surface, color:isActive?"#3B82F6":th.muted, fontSize:12, fontWeight:isActive?700:400, cursor:"pointer", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6, flexShrink:0, transition:"all .15s" }}>
+                    <Flag loc={loc} size={14}/>
+                    <span>{loc}</span>
+                    {isOwn && <span style={{ fontSize:10, padding:"1px 5px", borderRadius:6, background:"#3B82F622", color:"#3B82F6", fontWeight:700 }}>Mine</span>}
+                    {isActive && !isOwn && <span style={{ fontSize:10, padding:"1px 5px", borderRadius:6, background:"#64748B22", color:"#64748B", fontWeight:700 }}>👁</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Read-only banner for other locations */}
+            {isReadOnly && (
+              <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:8, background:"#F59E0B18", border:"1px solid #F59E0B44", marginBottom:12, fontSize:13 }}>
+                <span style={{ fontSize:16 }}>👁</span>
+                <span style={{ color:"#92400E", fontWeight:600 }}>Read-only view</span>
+                <span style={{ color:"#B45309" }}>— You are browsing <strong>{browseLocation}</strong>. To edit leads, switch to your location.</span>
+                <button onClick={()=>loadBrowseLocation(null)} style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:6, border:"none", background:"#F59E0B", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>← Back to {session.location}</button>
+              </div>
+            )}
+            {browseLoading && (
+              <div style={{ textAlign:"center", padding:"30px 0", color:th.muted }}>⏳ Loading {browseLocation}…</div>
+            )}
+
             <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t.search}
                 style={{ flex:"2 1 180px", padding:"8px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.surface, color:th.text, fontSize:13, outline:"none" }} />
@@ -1939,21 +1987,23 @@ export default function App() {
                 </div>
               ))}
             </div>
-            {/* Big Add Lead button */}
-            <button onClick={()=>setModal("new")}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor="#3B82F6";e.currentTarget.style.background="#3B82F611";}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.background=th.surface;}}
-              style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, width:"100%", padding:"16px 20px", borderRadius:10, border:`2px dashed ${th.border}`, background:th.surface, color:"#3B82F6", fontSize:15, fontWeight:700, cursor:"pointer", marginBottom:16, transition:"all .2s", boxSizing:"border-box" }}>
-              <span style={{ width:28, height:28, borderRadius:7, background:"linear-gradient(135deg,#3B82F6,#6366F1)", display:"inline-flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:20, fontWeight:800, lineHeight:1 }}>+</span>
-              {t.newLead}
-            </button>
+            {/* Big Add Lead button — hidden in read-only mode */}
+            {!isReadOnly && (
+              <button onClick={()=>setModal("new")}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="#3B82F6";e.currentTarget.style.background="#3B82F611";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.background=th.surface;}}
+                style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, width:"100%", padding:"16px 20px", borderRadius:10, border:`2px dashed ${th.border}`, background:th.surface, color:"#3B82F6", fontSize:15, fontWeight:700, cursor:"pointer", marginBottom:16, transition:"all .2s", boxSizing:"border-box" }}>
+                <span style={{ width:28, height:28, borderRadius:7, background:"linear-gradient(135deg,#3B82F6,#6366F1)", display:"inline-flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:20, fontWeight:800, lineHeight:1 }}>+</span>
+                {t.newLead}
+              </button>
+            )}
             {filtered.length === 0 ? (
               <div style={{ textAlign:"center", padding:"40px 0", color:th.muted, fontSize:15 }}>
                 {t.noLeads} <button onClick={()=>{setSearch("");setFilterStage("All");setFilterOwner("All");}} style={{ background:"none", border:"none", color:"#3B82F6", cursor:"pointer", fontSize:15 }}>{t.clearFilters}</button>
               </div>
             ) : (
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
-                {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={setModal} onStageChange={changeStage} onDelete={deleteDeal} lang={lang} th={th} />)}
+                {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={isReadOnly?null:setModal} onStageChange={isReadOnly?null:changeStage} onDelete={isReadOnly?null:deleteDeal} lang={lang} th={th} readOnly={isReadOnly} />)}
               </div>
             )}
           </>
