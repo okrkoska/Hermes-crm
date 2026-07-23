@@ -760,16 +760,17 @@ function SettingsPanel({ session, lang, setLang, onSignOut, t, theme, setTheme, 
   const inp = (label, val, set) => (
     <div style={{ marginBottom:14 }}>
       <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{label}</label>
-      <div style={{ display:"flex", gap:8 }}>
-        {[0,1,2,3].map(i => (
-          <div key={i} style={{ flex:1, height:48, borderRadius:8, border:`2px solid ${val.length > i ? "#3B82F6" : th.border}`, background:th.inputBg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, color:"#3B82F6" }}>
-            {val.length > i ? "●" : ""}
-          </div>
-        ))}
-      </div>
-      <input type="password" value={val} onChange={e => { set(e.target.value.replace(/\D/g,"").slice(0,4)); setMsg(null); }}
-        maxLength={4} placeholder="enter PIN"
-        style={{ width:"100%", marginTop:8, padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:16, boxSizing:"border-box", outline:"none" }} />
+      <input
+        type="password"
+        value={val}
+        onChange={e => { set(e.target.value.replace(/\D/g,"").slice(0,4)); setMsg(null); }}
+        maxLength={4}
+        placeholder="••••"
+        autoComplete="off"
+        style={{ width:"100%", padding:"13px 16px", borderRadius:8, border:`2px solid ${val.length>0?"#3B82F6":th.border}`, background:th.inputBg, color:th.text, fontSize:22, letterSpacing:8, boxSizing:"border-box", outline:"none", cursor:"text", fontFamily:"monospace" }}
+        onFocus={e => e.target.style.borderColor="#3B82F6"}
+        onBlur={e => e.target.style.borderColor=val.length>0?"#3B82F6":th.border}
+      />
     </div>
   );
 
