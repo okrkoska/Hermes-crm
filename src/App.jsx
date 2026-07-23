@@ -264,8 +264,8 @@ const SAMPLE_DEALS = (loc) => [
 
 // ─── CSV Export (always EN) ───────────────────────────────────────────────────
 function exportCSV(deals, location) {
-  const headers = ["ID","Name","Company","Value (EUR)","Stage","Owner","Probability (%)","Source","Go Live","Lost Reason","Location","Created","Updated","Notes"];
-  const rows = deals.map(d => [d.id, `"${d.name}"`, `"${d.company}"`, d.value, d.stage, d.owner, d.probability, d.source||"", d.goLive||"", `"${(d.lostReason||"").replace(/"/g,'""')} "`, location, d.created, d.updated, `"${(d.notes||"").replace(/"/g,'""')}"`]);
+  const headers = ["ID","Name","Company","Value (EUR)","Stage","Owner","Probability (%)","Source","Go Live","Lost Reason","Contact Name","Contact Role","Contact Email","Contact Phone","Location","Created","Updated","Notes"];
+  const rows = deals.map(d => [d.id, `"${d.name}"`, `"${d.company}"`, d.value, d.stage, d.owner, d.probability, d.source||"", d.goLive||"", `"${(d.lostReason||"").replace(/"/g,'""')} "`, `"${(d.contactName||"").replace(/"/g,'""')} "`, `"${(d.contactRole||"").replace(/"/g,'""')} "`, d.contactEmail||"", d.contactPhone||"", location, d.created, d.updated, `"${(d.notes||"").replace(/"/g,'""')}"`]);
   const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
   const blob = new Blob(["\uFEFF"+csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
@@ -319,6 +319,7 @@ function PinPad({ value, onChange }) {
         </button>
       </div>
     </div>
+
   );
 }
 
@@ -491,6 +492,7 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
   const t = T[lang];
   const meta = stageMeta(deal.stage);
   const [expanded, setExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('deal');
 
   return (
     <div style={{ background:th.surface, border:`1px solid ${th.border}`, borderRadius:10, overflow:"hidden", transition:"box-shadow .2s" }}
@@ -554,23 +556,87 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th }) {
           </button>
         </div>
         {expanded && (
-          <div style={{ borderTop:`1px solid ${th.border}`, paddingTop:10, marginTop:10 }}>
-            <div style={{ display:"flex", gap:16, marginBottom:8, fontSize:11 }}>
-              <span style={{ color:th.muted }}>{t.created}: <span style={{color:th.text2}}>{deal.created}</span></span>
-              <span style={{ color:th.muted }}>{t.updated}: <span style={{color:th.text2}}>{deal.updated}</span></span>
+          <div style={{ borderTop:`1px solid ${th.border}`, marginTop:10 }}>
+            {/* Tab bar */}
+            <div style={{ display:"flex", borderBottom:`1px solid ${th.border}` }}>
+              {[
+                { id:"deal", icon:"💼", label:"Deal" },
+                { id:"contact", icon:"👤", label:"Contact" },
+                { id:"files", icon:"📎", label:"Files" },
+              ].map(tab => (
+                <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+                  style={{ flex:1, padding:"8px 0", border:"none", background: activeTab===tab.id ? th.surface : th.surface2, borderBottom: activeTab===tab.id ? `2px solid ${meta.color}` : "2px solid transparent", color: activeTab===tab.id ? meta.color : th.muted, fontSize:11, fontWeight: activeTab===tab.id ? 700 : 400, cursor:"pointer", transition:"all .15s" }}>
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
             </div>
-            <div style={{ display:"flex", gap:6, marginBottom: deal.notes ? 8 : 0 }}>
-              <button onClick={() => onStageChange(deal.id,"Won")} style={{ flex:1, padding:"5px 0", borderRadius:6, border:"1px solid #10B98144", background: deal.stage==="Won"?"#10B98122":"none", color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markWon}</button>
-              <button onClick={() => onStageChange(deal.id,"Lost")} style={{ flex:1, padding:"5px 0", borderRadius:6, border:"1px solid #EF444444", background: deal.stage==="Lost"?"#EF444422":"none", color:"#EF4444", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markLost}</button>
+
+            {/* Tab content */}
+            <div style={{ padding:"12px 14px" }}>
+              {activeTab === "deal" && (
+                <>
+                  <div style={{ display:"flex", gap:6, marginBottom:8 }}>
+                    <button onClick={() => onStageChange(deal.id,"Won")} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"1px solid #10B98144", background: deal.stage==="Won"?"#10B98122":"none", color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markWon}</button>
+                    <button onClick={() => onStageChange(deal.id,"Lost")} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"1px solid #EF444444", background: deal.stage==="Lost"?"#EF444422":"none", color:"#EF4444", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markLost}</button>
+                  </div>
+                  {deal.stage === "Lost" && deal.lostReason && (
+                    <div style={{ padding:"8px 10px", borderRadius:7, background:"#EF444408", border:"1px solid #EF444433", marginBottom:8 }}>
+                      <div style={{ fontSize:10, color:"#EF4444", textTransform:"uppercase", letterSpacing:".05em", marginBottom:3, fontWeight:600 }}>❌ {t.lostReason}</div>
+                      <div style={{ fontSize:12, color:th.text }}>{deal.lostReason}</div>
+                    </div>
+                  )}
+                  <div style={{ display:"flex", gap:14, fontSize:11, color:th.muted, marginBottom: deal.notes?8:0 }}>
+                    <span>{t.created}: <span style={{color:th.text2}}>{deal.created}</span></span>
+                    <span>{t.updated}: <span style={{color:th.text2}}>{deal.updated}</span></span>
+                  </div>
+                  {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic" }}>"{deal.notes}"</div>}
+                </>
+              )}
+
+              {activeTab === "contact" && (
+                <>
+                  {(deal.contactName||deal.contactEmail||deal.contactPhone) ? (
+                    <>
+                      {deal.contactName && (
+                        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                          <div style={{ width:36, height:36, borderRadius:"50%", background:meta.color+"22", color:meta.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, flexShrink:0 }}>
+                            {deal.contactName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize:13, fontWeight:700, color:th.text }}>{deal.contactName}</div>
+                            {deal.contactRole && <div style={{ fontSize:11, color:th.muted }}>{deal.contactRole}</div>}
+                          </div>
+                        </div>
+                      )}
+                      <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                        {deal.contactEmail && (
+                          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
+                            <span style={{ fontSize:14, flexShrink:0 }}>✉️</span>
+                            <a href={`mailto:${deal.contactEmail}`} style={{ color:"#3B82F6", textDecoration:"none" }}>{deal.contactEmail}</a>
+                          </div>
+                        )}
+                        {deal.contactPhone && (
+                          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
+                            <span style={{ fontSize:14, flexShrink:0 }}>📞</span>
+                            <a href={`tel:${deal.contactPhone}`} style={{ color:th.text2, textDecoration:"none" }}>{deal.contactPhone}</a>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign:"center", padding:"16px 0", color:th.muted, fontSize:13 }}>
+                      <div style={{ fontSize:24, marginBottom:6 }}>👤</div>
+                      No contact added yet.<br/>
+                      <span style={{ fontSize:12 }}>Click ✏️ Edit to add contact details.</span>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeTab === "files" && (
+                <AttachmentsPanel dealId={deal.id} th={th} t={t} />
+              )}
             </div>
-            {deal.stage === "Lost" && deal.lostReason && (
-              <div style={{ padding:"8px 10px", borderRadius:7, background:"#EF444408", border:"1px solid #EF444433", marginBottom:6 }}>
-                <div style={{ fontSize:10, color:"#EF4444", textTransform:"uppercase", letterSpacing:".05em", marginBottom:3, fontWeight:600 }}>❌ {t.lostReason}</div>
-                <div style={{ fontSize:12, color:th.text }}>{deal.lostReason}</div>
-              </div>
-            )}
-            {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic", marginBottom:4 }}>"{deal.notes}"</div>}
-            <AttachmentsPanel dealId={deal.id} th={th} t={t} />
           </div>
         )}
       </div>
@@ -1074,11 +1140,88 @@ function HelpView({ th, t, lang }) {
 }
 
 // ─── Group Dashboard ──────────────────────────────────────────────────────────
-function GroupDashboard({ th, t, lang }) {
+
+// ─── GroupLeadCard — read-only for other locations ───────────────────────────
+function GroupLeadCard({ deal, location, session, onStageChange, onEdit, onDelete, th, t, lang, meta }) {
+  const isOwn = session && session.location === location;
+  const fmtM = (n) => n>=1000000?(n/1000000).toFixed(2)+"M":n>=1000?(n/1000).toFixed(0)+"k":String(n);
+  const mainStages = STAGES.slice(0,4);
+  const idx = STAGES.indexOf(deal.stage);
+  const isTerminal = deal.stage==="Won"||deal.stage==="Lost";
+  const termColor = deal.stage==="Won"?"#10B981":deal.stage==="Lost"?"#EF4444":null;
+
+  return (
+    <div style={{ background:th.surface2, borderRadius:9, border:`1px solid ${th.border}`, overflow:"hidden", marginBottom:8 }}>
+      <div style={{ height:3, background:`linear-gradient(90deg,${meta.color},${meta.color}44)` }}/>
+      <div style={{ padding:"11px 13px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:th.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{deal.name}</div>
+            <div style={{ fontSize:11, color:th.muted }}>{deal.company}</div>
+          </div>
+          <div style={{ fontSize:15, fontWeight:800, color:meta.color, marginLeft:10, flexShrink:0 }}>{fmtM(deal.value)} EUR</div>
+        </div>
+
+        {/* Date strip */}
+        {(deal.created||deal.goLive) && (
+          <div style={{ display:"flex", alignItems:"center", gap:5, padding:"5px 8px", background:th.surface, borderRadius:6, border:`1px solid ${th.border}`, fontSize:11, marginBottom:8 }}>
+            <span style={{ color:th.muted }}>📅 {deal.created||"—"}</span>
+            <span style={{ color:th.muted, fontSize:10 }}>→</span>
+            <span style={{ color:"#3B82F6", fontWeight:600 }}>🚀 {deal.goLive||t.noGoLive}</span>
+            {deal.created && deal.goLive && (() => {
+              const m = Math.round((new Date(deal.goLive+"-01")-new Date(deal.created))/(1000*60*60*24*30));
+              return m>0 ? <span style={{ marginLeft:"auto", color:th.muted }}>{m}m</span> : null;
+            })()}
+          </div>
+        )}
+
+        {/* Progress bar */}
+        <div style={{ display:"flex", alignItems:"center", marginBottom:8 }}>
+          {mainStages.map((s,i) => {
+            const dotColor = isTerminal?termColor:(i<=idx?STAGE_META[i].color:null);
+            const lineColor = isTerminal?termColor:(i<idx?STAGE_META[i].color:th.border);
+            return (
+              <div key={s} style={{ display:"flex", alignItems:"center", flex:i<3?1:"none" }}>
+                <div style={{ width:20, height:20, borderRadius:"50%", background:dotColor||th.surface, border:`2px solid ${dotColor||th.border}`, color:dotColor?"#fff":th.muted, display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:700, flexShrink:0 }}>
+                  {(isTerminal||(dotColor&&i<idx))?"✓":i+1}
+                </div>
+                {i<3&&<div style={{ flex:1, height:2, background:lineColor }}/>}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tags row */}
+        <div style={{ display:"flex", gap:5, alignItems:"center", flexWrap:"wrap" }}>
+          <span style={{ fontSize:10, padding:"2px 7px", borderRadius:7, background:th.border, color:th.text2 }}>{deal.owner}</span>
+          {deal.source && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:7, background:meta.color+"18", color:meta.color, fontWeight:600 }}>{SOURCE_ICONS[SOURCES.indexOf(deal.source)]||"🎯"} {SOURCE_LABELS[lang]?.[SOURCES.indexOf(deal.source)]||deal.source}</span>}
+          <span style={{ marginLeft:"auto", fontSize:10, color:th.muted }}>{deal.probability}%</span>
+          {!isOwn && <span style={{ fontSize:10, padding:"2px 7px", borderRadius:7, background:"#64748B22", color:"#64748B", fontWeight:600 }}>👁 Read only</span>}
+        </div>
+
+        {/* Action buttons — only for own location */}
+        {isOwn && (
+          <div style={{ display:"flex", gap:6, marginTop:8 }}>
+            <button onClick={()=>onEdit(deal)} style={{ flex:1, padding:"6px 0", borderRadius:6, border:`1px solid #3B82F644`, background:"#3B82F611", color:"#3B82F6", fontSize:11, fontWeight:600, cursor:"pointer" }}>✏️ {t.edit}</button>
+            <button onClick={()=>onStageChange(deal.id, deal.stage==="Won"?"Negotiation":"Won")}
+              style={{ flex:1, padding:"6px 0", borderRadius:6, border:"1px solid #10B98144", background:"#10B98111", color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer" }}>
+              {deal.stage==="Won"?"↩ Reopen":"✓ Won"}
+            </button>
+            <button onClick={()=>onDelete(deal.id)} style={{ padding:"6px 10px", borderRadius:6, border:"1px solid #EF444433", background:"none", color:"#EF4444", fontSize:11, cursor:"pointer" }}>🗑</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GroupDashboard({ th, t, lang, session, onStageChange, onEdit, onDelete }) {
   const [allData, setAllData] = useState({});
   const [loadingGroup, setLoadingGroup] = useState(true);
-  const [trendMetric, setTrendMetric] = useState("pipeline"); // pipeline | won | leads
-  const [trendScope, setTrendScope] = useState("global");     // global | <location>
+  const [trendMetric, setTrendMetric] = useState("pipeline");
+  const [trendScope, setTrendScope] = useState("global");
+  const [stageModal, setStageModal] = useState(null); // null | stage name
+  const [modalTab, setModalTab] = useState("all");    // "all" | location name
 
   useEffect(() => {
     (async () => {
@@ -1244,15 +1387,23 @@ function GroupDashboard({ th, t, lang }) {
         {card("Total Leads", allDeals.length, `${LOCATIONS.length} locations`, "#EC4899")}
       </div>
 
-      {/* ── Global Stage Counts ── */}
+      {/* ── Global Stage Counts — clickable ── */}
       <div style={{ background:th.surface, borderRadius:10, padding:"18px", border:`1px solid ${th.border}`, marginBottom:18 }}>
-        <div style={{ fontSize:13, fontWeight:600, color:th.muted, marginBottom:14 }}>Global Stage Distribution</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:th.muted }}>Global Stage Distribution</div>
+          <div style={{ fontSize:11, color:th.muted, fontStyle:"italic" }}>Click a stage to see leads ↓</div>
+        </div>
         <div style={{ display:"flex", gap:6 }}>
           {STAGES.map((s,i) => (
-            <div key={s} style={{ flex:1, textAlign:"center", padding:"10px 4px", borderRadius:8, background:STAGE_META[i].bg, border:`1px solid ${STAGE_META[i].color}33` }}>
-              <div style={{ fontSize:20, fontWeight:800, color:STAGE_META[i].color }}>{gByStage[i]}</div>
+            <button key={s} onClick={() => { setStageModal(s); setModalTab("all"); }}
+              title={`Show all ${gByStage[i]} leads in ${STAGE_LABELS["en"][i]}`}
+              style={{ flex:1, textAlign:"center", padding:"12px 4px", borderRadius:8, background:STAGE_META[i].bg, border:`2px solid ${STAGE_META[i].color}44`, cursor:"pointer", transition:"all .15s", outline:"none" }}
+              onMouseEnter={e=>{ e.currentTarget.style.border=`2px solid ${STAGE_META[i].color}`; e.currentTarget.style.transform="translateY(-2px)"; }}
+              onMouseLeave={e=>{ e.currentTarget.style.border=`2px solid ${STAGE_META[i].color}44`; e.currentTarget.style.transform="translateY(0)"; }}>
+              <div style={{ fontSize:22, fontWeight:800, color:STAGE_META[i].color }}>{gByStage[i]}</div>
               <div style={{ fontSize:9, color:STAGE_META[i].color, textTransform:"uppercase", marginTop:3, fontWeight:600 }}>{STAGE_LABELS["en"][i]}</div>
-            </div>
+              {gByStage[i]>0 && <div style={{ fontSize:8, color:STAGE_META[i].color, marginTop:2, opacity:.7 }}>▼</div>}
+            </button>
           ))}
         </div>
       </div>
@@ -1393,6 +1544,97 @@ function GroupDashboard({ th, t, lang }) {
           </div>
         ))}
       </div>
+
+      {/* ── Stage Drill-Down Modal ── */}
+      {stageModal && (() => {
+        const si = STAGES.indexOf(stageModal);
+        const meta = STAGE_META[si] || STAGE_META[0];
+        const stageLeads = Object.entries(allData)
+          .flatMap(([loc, ds]) => ds.filter(d=>d.stage===stageModal).map(d=>({...d, location:loc})));
+        const byLoc = {};
+        stageLeads.forEach(d => {
+          if (!byLoc[d.location]) byLoc[d.location] = [];
+          byLoc[d.location].push(d);
+        });
+        const sortedLocs = Object.keys(byLoc).sort((a,b)=>a.localeCompare(b));
+        const tabLocs = ["all", ...sortedLocs];
+        const visibleLeads = modalTab === "all"
+          ? sortedLocs.flatMap(loc => byLoc[loc].map(d=>({...d,_loc:loc})))
+          : (byLoc[modalTab]||[]).map(d=>({...d,_loc:modalTab}));
+        const totalVal = stageLeads.reduce((s,d)=>s+d.value,0);
+        const fmtM = (n) => n>=1000000?(n/1000000).toFixed(2)+"M":n>=1000?(n/1000).toFixed(0)+"k":String(n);
+
+        return (
+          <div onClick={e=>e.target===e.currentTarget&&setStageModal(null)}
+            style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+            <div style={{ background:th.surface, borderRadius:14, border:`1px solid ${th.border}`, width:"100%", maxWidth:580, maxHeight:"88vh", display:"flex", flexDirection:"column", boxShadow:"0 24px 60px rgba(0,0,0,.5)" }}>
+
+              {/* Header */}
+              <div style={{ padding:"16px 18px", borderBottom:`1px solid ${th.border}`, flexShrink:0 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div style={{ width:34, height:34, borderRadius:9, background:meta.color+"22", color:meta.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:800 }}>
+                      {stageLeads.length}
+                    </div>
+                    <div>
+                      <div style={{ fontSize:16, fontWeight:800, color:th.text }}>{STAGE_LABELS["en"][si]}</div>
+                      <div style={{ fontSize:12, color:th.muted }}>
+                        {stageLeads.length} leads · {sortedLocs.length} locations · {fmtM(totalVal)} EUR
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={()=>setStageModal(null)}
+                    style={{ width:30, height:30, borderRadius:"50%", border:`1px solid ${th.border}`, background:th.surface2, color:th.muted, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Location tab bar */}
+              <div style={{ display:"flex", overflowX:"auto", borderBottom:`1px solid ${th.border}`, flexShrink:0, scrollbarWidth:"none" }}>
+                {tabLocs.map(loc => {
+                  const isAll = loc === "all";
+                  const active = modalTab === loc;
+                  const cnt = isAll ? stageLeads.length : (byLoc[loc]||[]).length;
+                  return (
+                    <button key={loc} onClick={()=>setModalTab(loc)}
+                      style={{ padding:"9px 14px", border:"none", borderBottom:`2px solid ${active?meta.color:"transparent"}`, background:active?th.surface:th.surface2, color:active?meta.color:th.muted, fontSize:12, fontWeight:active?700:400, cursor:"pointer", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
+                      {isAll ? <><span>🌍</span><span>All</span><span style={{ fontSize:11, opacity:.7 }}>({cnt})</span></> : <><Flag loc={loc} size={13}/><span>{loc}</span><span style={{ fontSize:11, opacity:.7 }}>({cnt})</span></>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Leads list */}
+              <div style={{ overflowY:"auto", padding:"12px 14px", flex:1 }}>
+                {modalTab === "all" ? (
+                  sortedLocs.map(loc => (
+                    <div key={loc} style={{ marginBottom:16 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8, paddingBottom:6, borderBottom:`1px solid ${th.border}` }}>
+                        <Flag loc={loc} size={14}/>
+                        <span style={{ fontSize:12, fontWeight:700, color:th.text2, textTransform:"uppercase", letterSpacing:".05em" }}>{loc}</span>
+                        <span style={{ fontSize:11, color:th.muted }}>{byLoc[loc].length} leads · {fmtM(byLoc[loc].reduce((s,d)=>s+d.value,0))} EUR</span>
+                      </div>
+                      {byLoc[loc].map(d => (
+                        <GroupLeadCard key={d.id} deal={d} location={loc} session={session}
+                          onStageChange={onStageChange} onEdit={onEdit} onDelete={onDelete} th={th} t={t} lang={lang} meta={meta} />
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  visibleLeads.map(d => (
+                    <GroupLeadCard key={d.id} deal={{...d}} location={modalTab} session={session}
+                      onStageChange={onStageChange} onEdit={onEdit} onDelete={onDelete} th={th} t={t} lang={lang} meta={meta} />
+                  ))
+                )}
+                {visibleLeads.length === 0 && (
+                  <div style={{ textAlign:"center", padding:"40px 0", color:th.muted, fontSize:14 }}>No leads in this stage</div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -1822,7 +2064,7 @@ export default function App() {
 
         {/* ── GROUP DASHBOARD ── */}
         {view === "group" && (
-          <GroupDashboard th={th} t={t} lang={lang} />
+          <GroupDashboard th={th} t={t} lang={lang} session={session} onStageChange={changeStage} onEdit={setModal} onDelete={deleteDeal} />
         )}
 
         {/* ── HELP ── */}
