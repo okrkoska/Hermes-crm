@@ -1591,18 +1591,26 @@ function GroupDashboard({ th, t, lang, session, onStageChange, onEdit, onDelete 
               </div>
 
               {/* Location tab bar */}
-              <div style={{ display:"flex", overflowX:"auto", borderBottom:`1px solid ${th.border}`, flexShrink:0, scrollbarWidth:"none" }}>
-                {tabLocs.map(loc => {
-                  const isAll = loc === "all";
-                  const active = modalTab === loc;
-                  const cnt = isAll ? stageLeads.length : (byLoc[loc]||[]).length;
-                  return (
-                    <button key={loc} onClick={()=>setModalTab(loc)}
-                      style={{ padding:"9px 14px", border:"none", borderBottom:`2px solid ${active?meta.color:"transparent"}`, background:active?th.surface:th.surface2, color:active?meta.color:th.muted, fontSize:12, fontWeight:active?700:400, cursor:"pointer", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
-                      {isAll ? <><span>🌍</span><span>All</span><span style={{ fontSize:11, opacity:.7 }}>({cnt})</span></> : <><Flag loc={loc} size={13}/><span>{loc}</span><span style={{ fontSize:11, opacity:.7 }}>({cnt})</span></>}
-                    </button>
-                  );
-                })}
+              <div style={{ flexShrink:0, background:th.surface2, borderBottom:`1px solid ${th.border}` }}>
+                <div style={{ padding:"8px 14px 0", fontSize:10, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", fontWeight:600 }}>
+                  Filter by location:
+                </div>
+                <div style={{ display:"flex", overflowX:"auto", paddingBottom:0, gap:4, padding:"6px 10px 0" }}>
+                  {tabLocs.map(loc => {
+                    const isAll = loc === "all";
+                    const active = modalTab === loc;
+                    const cnt = isAll ? stageLeads.length : (byLoc[loc]||[]).length;
+                    return (
+                      <button key={loc} onClick={()=>setModalTab(loc)}
+                        style={{ padding:"7px 12px", border:`1.5px solid ${active?meta.color:th.border}`, borderRadius:"8px 8px 0 0", borderBottom:`2px solid ${active?meta.color:th.border}`, background:active?meta.color+"18":th.surface, color:active?meta.color:th.muted, fontSize:12, fontWeight:active?700:500, cursor:"pointer", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5, flexShrink:0, transition:"all .15s", marginBottom:"-1px" }}>
+                        {isAll
+                          ? <><span style={{fontSize:14}}>🌍</span><span>All</span><span style={{ fontSize:11, padding:"1px 5px", borderRadius:8, background:active?meta.color+"33":"#00000011", marginLeft:2 }}>{cnt}</span></>
+                          : <><Flag loc={loc} size={14}/><span>{loc}</span><span style={{ fontSize:11, padding:"1px 5px", borderRadius:8, background:active?meta.color+"33":"#00000011", marginLeft:2 }}>{cnt}</span></>
+                        }
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Leads list */}
