@@ -86,8 +86,8 @@ const dealToRow = (d, location) => ({
 
 
 // ─── Locations ────────────────────────────────────────────────────────────────
-const LOCATIONS = ["Altenkundstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
-const LOCATION_FLAGS = { Altenkundstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
+const LOCATIONS = ["Altenkunstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
+const LOCATION_FLAGS = { Altenkunstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
 
 const FlagDE = ({w,h}) => (
   <svg viewBox="0 0 5 3" width={w} height={h}><rect width="5" height="1" y="0" fill="#000"/><rect width="5" height="1" y="1" fill="#DD0000"/><rect width="5" height="1" y="2" fill="#FFCE00"/></svg>
