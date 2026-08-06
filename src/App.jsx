@@ -87,6 +87,9 @@ const dealToRow = (d, location) => ({
 
 // ─── Locations ────────────────────────────────────────────────────────────────
 const LOCATIONS = ["Altenkunstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
+// Admins have full edit rights in ALL locations
+const ADMINS = ["Amadeus"];
+
 const LOCATION_FLAGS = { Altenkunstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
 
 const FlagDE = ({w,h}) => (
@@ -1797,23 +1800,31 @@ export default function App() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(null), 2500); };
 
+  const isAdmin = session && ADMINS.includes(session.name);
+  const activeLoc = browseLocation || session?.location || "";
+  const isReadOnly = !isAdmin && browseLocation && browseLocation !== session?.location;
+
   const saveDeal = useCallback(async (form) => {
+    const targetLocation = activeLoc || session.location;
+    const isOwnLocation = targetLocation === session.location;
     try {
       if (form.id) {
-        const row = { ...dealToRow(form, session.location), created_at: form.created || today() };
+        const row = { ...dealToRow(form, targetLocation), created_at: form.created || today() };
         await sb.update("deals", form.id, row);
-        setDeals(ds => ds.map(d => d.id===form.id ? {...form, updated:today()} : d));
+        if (isOwnLocation) setDeals(ds => ds.map(d => d.id===form.id ? {...form, updated:today()} : d));
+        else setBrowseDeals(ds => ds.map(d => d.id===form.id ? {...form, updated:today()} : d));
         showToast(t.edit+" ✓");
       } else {
-        const row = { ...dealToRow(form, session.location), created_at: form.created || today() };
+        const row = { ...dealToRow(form, targetLocation), created_at: form.created || today() };
         const result = await sb.insert("deals", row);
         const newDeal = rowToDeal(result[0]);
-        setDeals(ds => [newDeal, ...ds]);
+        if (isOwnLocation) setDeals(ds => [newDeal, ...ds]);
+        else setBrowseDeals(ds => [newDeal, ...ds]);
         showToast(t.newLead+" ✓");
       }
     } catch(e) { showToast("Error saving: "+e.message); }
     setModal(null);
-  }, [session, lang]);
+  }, [session, lang, browseLocation]);
 
   const changeStage = useCallback(async (id, stage) => {
     const prob = stage==="Won"?100:stage==="Lost"?0:undefined;
@@ -1830,6 +1841,7 @@ export default function App() {
     try {
       await sb.delete("deals", id);
       setDeals(ds => ds.filter(d => d.id!==id));
+      setBrowseDeals(ds => ds.filter(d => d.id!==id));
     } catch(e) { showToast("Error: "+e.message); }
   }, [lang]);
 
@@ -1846,7 +1858,7 @@ export default function App() {
 
   const activeLoc = browseLocation || session?.location || "";
   const activeDeals = browseLocation ? browseDeals : deals;
-  const isReadOnly = browseLocation && browseLocation !== session?.location;
+
 
   const owners = session ? [...new Set([session.name, ...deals.map(d=>d.owner).filter(Boolean)])] : [session?.name||''].filter(Boolean);
 
@@ -1942,20 +1954,30 @@ export default function App() {
                     <Flag loc={loc} size={14}/>
                     <span>{loc}</span>
                     {isOwn && <span style={{ fontSize:10, padding:"1px 5px", borderRadius:6, background:"#3B82F622", color:"#3B82F6", fontWeight:700 }}>Mine</span>}
+                    {isAdmin && !isOwn && isActive && <span style={{ fontSize:10, padding:"1px 5px", borderRadius:6, background:"#6366F122", color:"#6366F1", fontWeight:700 }}>⭐</span>}
                     {isActive && !isOwn && <span style={{ fontSize:10, padding:"1px 5px", borderRadius:6, background:"#64748B22", color:"#64748B", fontWeight:700 }}>👁</span>}
                   </button>
                 );
               })}
             </div>
 
-            {/* Read-only banner for other locations */}
-            {isReadOnly && (
-              <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:8, background:"#F59E0B18", border:"1px solid #F59E0B44", marginBottom:12, fontSize:13 }}>
-                <span style={{ fontSize:16 }}>👁</span>
-                <span style={{ color:"#92400E", fontWeight:600 }}>Read-only view</span>
-                <span style={{ color:"#B45309" }}>— You are browsing <strong>{browseLocation}</strong>. To edit leads, switch to your location.</span>
-                <button onClick={()=>loadBrowseLocation(null)} style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:6, border:"none", background:"#F59E0B", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>← Back to {session.location}</button>
-              </div>
+            {/* Banner for browsing other locations */}
+            {browseLocation && browseLocation !== session.location && (
+              isReadOnly ? (
+                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:8, background:"#F59E0B18", border:"1px solid #F59E0B44", marginBottom:12, fontSize:13 }}>
+                  <span style={{ fontSize:16 }}>👁</span>
+                  <span style={{ color:"#92400E", fontWeight:600 }}>Read-only view</span>
+                  <span style={{ color:"#B45309" }}>— You are browsing <strong>{browseLocation}</strong>. To edit leads, switch to your location.</span>
+                  <button onClick={()=>loadBrowseLocation(null)} style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:6, border:"none", background:"#F59E0B", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>← Back to {session.location}</button>
+                </div>
+              ) : (
+                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:8, background:"#6366F118", border:"1px solid #6366F144", marginBottom:12, fontSize:13 }}>
+                  <span style={{ fontSize:16 }}>⭐</span>
+                  <span style={{ color:"#6366F1", fontWeight:700 }}>Admin — {browseLocation}</span>
+                  <span style={{ color:"#475569" }}>Full edit access in all locations.</span>
+                  <button onClick={()=>loadBrowseLocation(null)} style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:6, border:"none", background:"#6366F1", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>← Back to {session.location}</button>
+                </div>
+              )
             )}
             {browseLoading && (
               <div style={{ textAlign:"center", padding:"30px 0", color:th.muted }}>⏳ Loading {browseLocation}…</div>
