@@ -653,7 +653,7 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly })
 // ─── Deal Modal ───────────────────────────────────────────────────────────────
 function DealModal({ deal, onSave, onClose, lang, owners, th }) {
   const t = T[lang];
-  const blank = { id:null, name:"", company:"", value:"", stage:"New Lead", owner:owners[0]||"", probability:20, notes:"", goLive:"", source:"Website / Web Form", lostReason:"", created:today() };
+  const blank = { id:null, name:"", company:"", value:"", stage:"New Lead", owner:owners[0]||"", probability:20, notes:"", goLive:"", source:"Website / Web Form", lostReason:"", contactName:"", contactRole:"", contactEmail:"", contactPhone:"", created:today() };
   const [form, setForm] = useState(deal ? { ...deal, created: deal.created||today() } : blank);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
@@ -675,6 +675,31 @@ function DealModal({ deal, onSave, onClose, lang, owners, th }) {
           <h3 style={{ margin:"0 0 20px", color:th.text, fontSize:18, fontWeight:700 }}>{deal ? t.editLead : t.addLead}</h3>
           {field(t.dealName, "name")}
           {field(t.company, "company")}
+          <div style={{ marginBottom:14, background:th.surface2, borderRadius:9, padding:"12px 14px", border:`1px solid ${th.border}` }}>
+            <div style={{ fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", fontWeight:600, marginBottom:10 }}>👤 Contact person</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div>
+                <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".05em", marginBottom:5 }}>Name</label>
+                <input value={form.contactName||""} onChange={e=>set("contactName",e.target.value)} placeholder="Jan Novák"
+                  style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:16, boxSizing:"border-box", outline:"none" }} />
+              </div>
+              <div>
+                <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".05em", marginBottom:5 }}>Position</label>
+                <input value={form.contactRole||""} onChange={e=>set("contactRole",e.target.value)} placeholder="Procurement Manager"
+                  style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:16, boxSizing:"border-box", outline:"none" }} />
+              </div>
+              <div>
+                <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".05em", marginBottom:5 }}>E-mail</label>
+                <input type="email" value={form.contactEmail||""} onChange={e=>set("contactEmail",e.target.value)} placeholder="jan@firma.de"
+                  style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:16, boxSizing:"border-box", outline:"none" }} />
+              </div>
+              <div>
+                <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".05em", marginBottom:5 }}>Phone</label>
+                <input type="tel" value={form.contactPhone||""} onChange={e=>set("contactPhone",e.target.value)} placeholder="+49 89 555 0100"
+                  style={{ width:"100%", padding:"9px 12px", borderRadius:7, border:`1px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:16, boxSizing:"border-box", outline:"none" }} />
+              </div>
+            </div>
+          </div>
           <div style={{ marginBottom:14 }}>
             <label style={{ display:"block", fontSize:11, color:th.muted, textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{t.created} 📅</label>
             <input type="date" value={form.created||today()} onChange={e => set("created", e.target.value)} style={inputStyle} />
