@@ -73,7 +73,10 @@ const rowToDeal = (r) => ({
   id: r.id, name: r.name, company: r.company, value: Number(r.value),
   stage: r.stage, owner: r.owner, probability: r.probability,
   source: r.source||"", notes: r.notes||"", goLive: r.go_live||"",
-  lostReason: r.lost_reason||"", created: r.created_at||today(), updated: r.updated_at||today(),
+  lostReason: r.lost_reason||"",
+  contactName: r.contact_name||"", contactRole: r.contact_role||"",
+  contactEmail: r.contact_email||"", contactPhone: r.contact_phone||"",
+  created: r.created_at||today(), updated: r.updated_at||today(),
 });
 
 // App deal → DB row
@@ -81,7 +84,10 @@ const dealToRow = (d, location) => ({
   location, name: d.name, company: d.company, value: d.value,
   stage: d.stage, owner: d.owner, probability: d.probability,
   source: d.source||"", notes: d.notes||"", go_live: d.goLive||"",
-  lost_reason: d.lostReason||"", updated_at: today(),
+  lost_reason: d.lostReason||"",
+  contact_name: d.contactName||"", contact_role: d.contactRole||"",
+  contact_email: d.contactEmail||"", contact_phone: d.contactPhone||"",
+  updated_at: today(),
 });
 
 
@@ -1884,9 +1890,7 @@ export default function App() {
     setBrowseLoading(false);
   };
 
-  const activeLoc = browseLocation || session?.location || "";
   const activeDeals = browseLocation ? browseDeals : deals;
-
 
   const owners = session ? [...new Set([session.name, ...deals.map(d=>d.owner).filter(Boolean)])] : [session?.name||''].filter(Boolean);
 
