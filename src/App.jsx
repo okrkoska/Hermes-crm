@@ -627,10 +627,15 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly })
                       </div>
                     </>
                   ) : (
-                    <div style={{ textAlign:"center", padding:"16px 0", color:th.muted, fontSize:13 }}>
-                      <div style={{ fontSize:24, marginBottom:6 }}>👤</div>
-                      No contact added yet.<br/>
-                      <span style={{ fontSize:12 }}>Click ✏️ Edit to add contact details.</span>
+                    <div style={{ textAlign:"center", padding:"16px 0" }}>
+                      <div style={{ fontSize:24, marginBottom:8 }}>👤</div>
+                      <div style={{ fontSize:13, color:th.muted, marginBottom:12 }}>No contact added yet.</div>
+                      {!readOnly && (
+                        <button onClick={() => onEdit(deal)}
+                          style={{ padding:"9px 22px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#3B82F6,#6366F1)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                          + Add contact
+                        </button>
+                      )}
                     </div>
                   )}
                 </>
