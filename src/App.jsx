@@ -59,6 +59,13 @@ const sb = {
     const d = await r.json();
     return `${SUPABASE_URL}/storage/v1${d.signedURL}`;
   },
+  async deleteWhere(table, params) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, {
+      method: "DELETE", headers: this.headers
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return true;
+  },
   async deleteFile(path) {
     const r = await fetch(`${SUPABASE_URL}/storage/v1/object/attachments/${path}`, {
       method: "DELETE",
@@ -496,17 +503,72 @@ function StageProgress({ stage, onChange, lang, th }) {
   );
 }
 
+
+// ─── ReactionsBar ─────────────────────────────────────────────────────────────
+const REACTION_EMOJIS = ["🎉","❤️","🔥","💪","👏"];
+
+function ReactionsBar({ dealId, dealOwner, session, th, reactions, onReact, onDeleteReaction, onDeleteAll }) {
+  const rxList = reactions || [];
+  const myReaction = rxList.find(r => r.user_name === session?.name);
+  const grouped = REACTION_EMOJIS.map(e => ({ emoji:e, users:rxList.filter(r=>r.emoji===e).map(r=>r.user_name) })).filter(g=>g.users.length>0);
+  const isOwner = session && session.name === dealOwner;
+  const isAdm = session && ADMINS.includes(session.name);
+  return (
+    <div style={{ borderTop:`1px solid ${th.border}`, padding:"8px 14px 6px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:5, flexWrap:"wrap" }}>
+        {REACTION_EMOJIS.map(e => (
+          <button key={e} onClick={() => onReact && onReact(dealId, e, myReaction)}
+            style={{ padding:"3px 7px", borderRadius:8, border:`1.5px solid ${myReaction?.emoji===e?"#3B82F6":th.border}`, background:myReaction?.emoji===e?"#3B82F622":th.surface, fontSize:15, cursor:"pointer", lineHeight:1.4 }}>
+            {e}
+          </button>
+        ))}
+        {grouped.map(g => (
+          <span key={g.emoji} title={g.users.join(", ")} style={{ fontSize:12, padding:"2px 7px", borderRadius:10, background:th.border, color:th.text2 }}>
+            {g.emoji} {g.users.length}
+          </span>
+        ))}
+        {(isOwner||isAdm) && rxList.length > 0 && (
+          <button onClick={() => onDeleteAll && onDeleteAll(dealId)}
+            style={{ marginLeft:"auto", padding:"2px 8px", borderRadius:6, border:"1px solid #EF444433", background:"none", color:"#EF4444", fontSize:11, cursor:"pointer" }}>
+            🗑 Clear
+          </button>
+        )}
+      </div>
+      {rxList.length > 0 && (
+        <div style={{ display:"flex", gap:5, marginTop:5, flexWrap:"wrap" }}>
+          {rxList.map(r => (
+            <span key={r.id} style={{ display:"inline-flex", alignItems:"center", gap:3, fontSize:11, padding:"2px 7px", borderRadius:7, background:th.surface, border:`1px solid ${th.border}`, color:th.muted }}>
+              {r.emoji} <span style={{ color:th.text2, fontWeight:500 }}>{r.user_name}</span>
+              {(isOwner||isAdm) && (
+                <button onClick={() => onDeleteReaction && onDeleteReaction(r.id)}
+                  style={{ marginLeft:2, border:"none", background:"none", color:"#EF4444", cursor:"pointer", fontSize:11, padding:0 }}>✕</button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Lead Card ────────────────────────────────────────────────────────────────
-function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly }) {
+function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly, session, reactions, onReact, onDeleteReaction, onDeleteAll }) {
   const t = T[lang];
   const meta = stageMeta(deal.stage);
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('deal');
+  const rxList = reactions || [];
+  const reactionCount = rxList.length;
 
   return (
-    <div style={{ background:th.surface, border:`1px solid ${th.border}`, borderRadius:10, overflow:"hidden", transition:"box-shadow .2s" }}
+    <div style={{ background:th.surface, border:`1px solid ${th.border}`, borderRadius:10, overflow:"visible", transition:"box-shadow .2s", position:"relative" }}
       onMouseEnter={e => e.currentTarget.style.boxShadow=`0 4px 20px ${meta.color}22`}
       onMouseLeave={e => e.currentTarget.style.boxShadow="none"}>
+      {reactionCount > 0 && (
+        <div style={{ position:"absolute", top:-7, right:-7, minWidth:20, height:20, borderRadius:10, background:"#EF4444", color:"#fff", fontSize:11, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", zIndex:10, boxShadow:"0 2px 6px rgba(239,68,68,.4)", border:"2px solid #fff", padding:"0 4px" }}>
+          {reactionCount > 9 ? "9+" : reactionCount}
+        </div>
+      )}
       <div style={{ height:3, background:`linear-gradient(90deg,${meta.color},${meta.color}44)` }} />
       <div style={{ padding:"14px 16px" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
@@ -1813,6 +1875,7 @@ export default function App() {
   const [browseLocation, setBrowseLocation] = useState(null); // null = own location
   const [browseDeals, setBrowseDeals] = useState([]); // deals from browsed location
   const [browseLoading, setBrowseLoading] = useState(false);
+  const [reactions, setReactions] = useState({});
 
   const t = T[lang];
 
@@ -1832,7 +1895,39 @@ export default function App() {
     })();
   }, [session]);
 
+  const loadReactions = async () => {
+    try {
+      const rows = await sb.query("reactions", "?order=created_at.asc");
+      const grouped = {};
+      rows.forEach(r => { const k=String(r.deal_id); if(!grouped[k]) grouped[k]=[]; grouped[k].push(r); });
+      setReactions(grouped);
+    } catch(e) {}
+  };
+  const handleReact = async (dealId, emoji, myReaction) => {
+    if (!session) return;
+    try {
+      if (myReaction?.emoji === emoji) await sb.deleteWhere("reactions", `?id=eq.${myReaction.id}`);
+      else if (myReaction) await sb.update("reactions", myReaction.id, { emoji });
+      else await sb.insert("reactions", { deal_id: dealId, user_name: session.name, location: session.location, emoji });
+      await loadReactions();
+    } catch(e) { showToast("Error: "+e.message); }
+  };
+  const handleDeleteReaction = async (id) => {
+    try { await sb.deleteWhere("reactions", `?id=eq.${id}`); await loadReactions(); } catch(e) {}
+  };
+  const handleDeleteAllReactions = async (dealId) => {
+    if (!confirm("Remove all reactions?")) return;
+    try { await sb.deleteWhere("reactions", `?deal_id=eq.${dealId}`); await loadReactions(); } catch(e) {}
+  };
+
   const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(null), 2500); };
+
+  useEffect(() => {
+    if (!session) return;
+    loadReactions();
+    const iv = setInterval(loadReactions, 5000);
+    return () => clearInterval(iv);
+  }, [session]);
 
   const isAdmin = session && ADMINS.includes(session.name);
   const activeLoc = browseLocation || session?.location || "";
@@ -2057,7 +2152,7 @@ export default function App() {
               </div>
             ) : (
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
-                {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={isReadOnly?null:setModal} onStageChange={isReadOnly?null:changeStage} onDelete={isReadOnly?null:deleteDeal} lang={lang} th={th} readOnly={isReadOnly} />)}
+                {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={isReadOnly?null:setModal} onStageChange={isReadOnly?null:changeStage} onDelete={isReadOnly?null:deleteDeal} lang={lang} th={th} readOnly={isReadOnly} session={session} reactions={reactions[String(d.id)]||[]} onReact={handleReact} onDeleteReaction={handleDeleteReaction} onDeleteAll={handleDeleteAllReactions} />)}
               </div>
             )}
           </>
