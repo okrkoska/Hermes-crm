@@ -559,6 +559,7 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly, s
   const [activeTab, setActiveTab] = useState('deal');
   const rxList = reactions || [];
   const reactionCount = rxList.length;
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div style={{ background:th.surface, border:`1px solid ${th.border}`, borderRadius:10, overflow:"visible", transition:"box-shadow .2s", position:"relative" }}
