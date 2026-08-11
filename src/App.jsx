@@ -65,6 +65,22 @@ const sb = {
       headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
     });
     return r.ok;
+  },
+  async deleteWhere(table, params) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, {
+      method: "DELETE", headers: this.headers
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return true;
+  },
+  async upsert(table, body, onConflict) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${onConflict}`, {
+      method: "POST",
+      headers: { ...this.headers, "Prefer": "return=representation,resolution=merge-duplicates" },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
   }
 };
 
@@ -95,6 +111,7 @@ const dealToRow = (d, location) => ({
 const LOCATIONS = ["Altenkunstadt", "Sonnefeld", "Otelfingen", "Valdengo", "Pilsen", "Jacksonville"];
 // Admins have full edit rights in ALL locations
 const ADMINS = ["Amadeus"];
+const REACTION_EMOJIS = ["🎉","❤️","🔥","💪","👏"];
 
 const LOCATION_FLAGS = { Altenkunstadt: "de", Sonnefeld: "de", Otelfingen: "ch", Valdengo: "it", Pilsen: "cz", Jacksonville: "us" };
 
@@ -1879,6 +1896,51 @@ export default function App() {
     } catch(e) { showToast("Error: "+e.message); }
   }, [lang]);
 
+  // Load reactions for all visible deals
+  const loadReactions = async () => {
+    try {
+      const rows = await sb.query("reactions", "?order=created_at.asc");
+      const grouped = {};
+      rows.forEach(r => {
+        if (!grouped[r.deal_id]) grouped[r.deal_id] = [];
+        grouped[r.deal_id].push(r);
+      });
+      setReactions(grouped);
+    } catch(e) { /* silent fail */ }
+  };
+
+  const handleReact = async (dealId, emoji, myReaction) => {
+    if (!session) return;
+    try {
+      if (myReaction?.emoji === emoji) {
+        // Remove reaction
+        await sb.deleteWhere("reactions", `?id=eq.${myReaction.id}`);
+      } else if (myReaction) {
+        // Change reaction
+        await sb.update("reactions", myReaction.id, { emoji });
+      } else {
+        // Add new reaction
+        await sb.insert("reactions", { deal_id: dealId, user_name: session.name, location: session.location, emoji });
+      }
+      await loadReactions();
+    } catch(e) { showToast("Error: "+e.message); }
+  };
+
+  const handleDeleteReaction = async (reactionId) => {
+    try {
+      await sb.deleteWhere("reactions", `?id=eq.${reactionId}`);
+      await loadReactions();
+    } catch(e) { showToast("Error: "+e.message); }
+  };
+
+  const handleDeleteAllReactions = async (dealId) => {
+    if (!confirm("Remove all reactions from this lead?")) return;
+    try {
+      await sb.deleteWhere("reactions", `?deal_id=eq.${dealId}`);
+      await loadReactions();
+    } catch(e) { showToast("Error: "+e.message); }
+  };
+
   const loadBrowseLocation = async (loc) => {
     if (!loc || loc === session.location) { setBrowseLocation(null); setBrowseDeals([]); return; }
     setBrowseLocation(loc);
@@ -2057,7 +2119,7 @@ export default function App() {
               </div>
             ) : (
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
-                {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={isReadOnly?null:setModal} onStageChange={isReadOnly?null:changeStage} onDelete={isReadOnly?null:deleteDeal} lang={lang} th={th} readOnly={isReadOnly} />)}
+                {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={isReadOnly?null:setModal} onStageChange={isReadOnly?null:changeStage} onDelete={isReadOnly?null:deleteDeal} lang={lang} th={th} readOnly={isReadOnly} session={session} reactions={reactions[d.id]||[]} onReact={handleReact} onDeleteReaction={handleDeleteReaction} onDeleteAll={handleDeleteAllReactions} />)}
               </div>
             )}
           </>
