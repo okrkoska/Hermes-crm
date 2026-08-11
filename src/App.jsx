@@ -557,53 +557,57 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly, s
   const meta = stageMeta(deal.stage);
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('deal');
+  const [hovered, setHovered] = useState(false);
   const rxList = reactions || [];
   const reactionCount = rxList.length;
-  const [hovered, setHovered] = useState(false);
+  const fmtM = (n) => n>=1000000?(n/1000000).toFixed(2)+"M":n>=1000?(n/1000).toFixed(0)+"k":String(n);
 
   return (
     <div style={{ position:"relative", marginBottom:10 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}>
 
-      {/* Floating emoji bar — appears on hover above card */}
+      {/* Floating emoji bar on hover */}
       {hovered && (
-        <div style={{ position:"absolute", top:-44, right:8, zIndex:100,
-          background:th.surface, border:`1px solid ${th.border}`,
-          borderRadius:12, padding:"6px 10px",
-          boxShadow:"0 6px 20px rgba(0,0,0,.18)",
-          display:"flex", alignItems:"center", gap:6 }}>
-          {/* Small arrow pointing down */}
-          <div style={{ position:"absolute", bottom:-6, right:16, width:10, height:10,
+        <div style={{ position:"absolute", top:-46, right:8, zIndex:100,
+          background:th.surface, border:`1px solid ${th.border}`, borderRadius:12,
+          padding:"6px 10px", boxShadow:"0 6px 20px rgba(0,0,0,.2)",
+          display:"flex", alignItems:"center", gap:5 }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}>
+          <div style={{ position:"absolute", bottom:-6, right:20, width:10, height:10,
             background:th.surface, border:`1px solid ${th.border}`,
-            borderBottom:"none", borderRight:"none",
-            transform:"rotate(225deg)" }} />
-          {REACTION_EMOJIS.map(e => {
+            borderBottom:"none", borderRight:"none", transform:"rotate(225deg)" }} />
+          {REACTION_EMOJIS.map(emoji => {
             const myR = rxList.find(r => r.user_name === session?.name);
-            const count = rxList.filter(r=>r.emoji===e).length;
-            const names = rxList.filter(r=>r.emoji===e).map(r=>r.user_name).join(", ");
+            const cnt = rxList.filter(r=>r.emoji===emoji).length;
+            const names = rxList.filter(r=>r.emoji===emoji).map(r=>r.user_name).join(", ");
             return (
-              <button key={e} onClick={() => onReact && onReact(deal.id, e, myR)}
-                title={names || e}
-                style={{ position:"relative", padding:"4px 6px", borderRadius:8,
-                  border:`1.5px solid ${myR?.emoji===e?"#3B82F6":th.border}`,
-                  background:myR?.emoji===e?"#3B82F622":th.surface,
-                  fontSize:20, cursor:"pointer", lineHeight:1.3,
-                  transition:"transform .1s" }}
-                onMouseEnter={e2 => e2.currentTarget.style.transform="scale(1.3)"}
-                onMouseLeave={e2 => e2.currentTarget.style.transform="scale(1)"}>
-                {e}
-                {count > 0 && (
-                  <span style={{ position:"absolute", top:-5, right:-5, width:14, height:14,
-                    borderRadius:"50%", background:"#3B82F6", color:"#fff",
-                    fontSize:9, fontWeight:800, display:"flex", alignItems:"center",
-                    justifyContent:"center", lineHeight:1 }}>
-                    {count}
-                  </span>
-                )}
+              <button key={emoji} onClick={() => onReact && onReact(deal.id, emoji, myR)}
+                title={names||emoji}
+                style={{ position:"relative", padding:"3px 6px", borderRadius:8,
+                  border:`1.5px solid ${myR?.emoji===emoji?"#3B82F6":th.border}`,
+                  background:myR?.emoji===emoji?"#3B82F622":th.surface,
+                  fontSize:19, cursor:"pointer", lineHeight:1.3 }}
+                onMouseEnter={ev => ev.currentTarget.style.transform="scale(1.25)"}
+                onMouseLeave={ev => ev.currentTarget.style.transform="scale(1)"}>
+                {emoji}
+                {cnt > 0 && <span style={{ position:"absolute", top:-4, right:-4, width:13, height:13,
+                  borderRadius:"50%", background:"#3B82F6", color:"#fff", fontSize:8,
+                  fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{cnt}</span>}
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Reaction badge */}
+      {reactionCount > 0 && (
+        <div style={{ position:"absolute", top:-7, right:-7, minWidth:20, height:20,
+          borderRadius:10, background:"#EF4444", color:"#fff", fontSize:11, fontWeight:800,
+          display:"flex", alignItems:"center", justifyContent:"center", zIndex:20,
+          boxShadow:"0 2px 6px rgba(239,68,68,.4)", border:"2px solid #fff", padding:"0 4px" }}>
+          {reactionCount > 9 ? "9+" : reactionCount}
         </div>
       )}
 
@@ -612,15 +616,151 @@ function LeadCard({ deal, onEdit, onStageChange, onDelete, lang, th, readOnly, s
         overflow:"hidden", transition:"box-shadow .2s" }}
         onMouseEnter={e => e.currentTarget.style.boxShadow=`0 4px 20px ${meta.color}22`}
         onMouseLeave={e => e.currentTarget.style.boxShadow="none"}>
-        {reactionCount > 0 && (
-          <div style={{ position:"absolute", top:-7, right:-7, minWidth:20, height:20,
-            borderRadius:10, background:"#EF4444", color:"#fff", fontSize:11,
-            fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center",
-            zIndex:20, boxShadow:"0 2px 6px rgba(239,68,68,.4)",
-            border:"2px solid #fff", padding:"0 4px" }}>
-            {reactionCount > 9 ? "9+" : reactionCount}
+      <div style={{ height:3, background:`linear-gradient(90deg,${meta.color},${meta.color}44)` }} />
+      <div style={{ padding:"14px 16px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:th.text, marginBottom:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{deal.name}</div>
+            <div style={{ fontSize:12, color:th.muted }}>{deal.company}</div>
+          </div>
+          <div style={{ textAlign:"right", flexShrink:0, marginLeft:12 }}>
+            <div style={{ fontSize:16, fontWeight:800, color:meta.color, letterSpacing:"-.02em" }}>{fmtM(deal.value)}</div>
+            <div style={{ fontSize:10, color:"#334155" }}>EUR</div>
+          </div>
+        </div>
+        <div style={{ marginBottom:10 }}>
+          <StageProgress stage={deal.stage} onChange={s => onStageChange(deal.id, s)} lang={lang} th={th} />
+        </div>
+        {/* Date strip — Design B */}
+        {(() => {
+          const created = deal.created ? new Date(deal.created).toLocaleDateString("en-US",{month:"short",year:"numeric"}) : null;
+          const goLiveDate = deal.goLive ? new Date(deal.goLive+"-01") : null;
+          const goLiveStr = goLiveDate ? goLiveDate.toLocaleDateString("en-US",{month:"short",year:"numeric"}) : null;
+          const createdDate = deal.created ? new Date(deal.created) : null;
+          const monthsDiff = (goLiveDate && createdDate) ? Math.round((goLiveDate - createdDate)/(1000*60*60*24*30)) : null;
+          const si = SOURCES.indexOf(deal.source||"");
+          const srcColor = si>=0 ? SOURCE_COLORS[si] : "#64748B";
+          const srcIcon = si>=0 ? SOURCE_ICONS[si] : "❓";
+          const srcLabel = si>=0 ? SOURCE_LABELS[lang][si] : (deal.source||"");
+          return (
+            <>
+              {(created || goLiveStr) && (
+                <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8, padding:"5px 10px", background:th.surface2, borderRadius:7, border:`1px solid ${th.border}`, fontSize:12 }}>
+                  <span style={{ color:th.muted }}>📅 {created||"—"}</span>
+                  <span style={{ color:th.muted, fontSize:10 }}>→</span>
+                  <span style={{ color:"#3B82F6", fontWeight:600 }}>🚀 {goLiveStr||t.noGoLive}</span>
+                  {monthsDiff!==null && <span style={{ marginLeft:"auto", fontSize:11, color:th.muted }}>{monthsDiff}m</span>}
+                </div>
+              )}
+              <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:6 }}>
+                <span style={{ fontSize:11, padding:"2px 8px", borderRadius:8, background:th.border, color:th.text2 }}>{deal.owner}</span>
+                {deal.source && (
+                  <span style={{ fontSize:11, padding:"2px 8px", borderRadius:8, background:srcColor+"18", color:srcColor, border:`1px solid ${srcColor}33`, fontWeight:600 }}>{srcIcon} {srcLabel}</span>
+                )}
+                <span style={{ marginLeft:"auto", fontSize:11, color:th.muted }}>{deal.probability}%</span>
+                <button onClick={() => setExpanded(e=>!e)} style={{ background:"none", border:"none", color:th.muted, fontSize:13, cursor:"pointer", padding:"0 2px" }}>{expanded?"▲":"▼"}</button>
+              </div>
+            </>
+          );
+        })()}
+        <div style={{ display:"flex", gap:8 }}>
+          <button onClick={() => onEdit(deal)}
+            style={{ flex:1, padding:"8px 0", borderRadius:7, border:"1px solid #3B82F6", background:"#3B82F611", color:"#3B82F6", fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+            ✏️ {t.edit}
+          </button>
+          <button onClick={() => onDelete(deal.id)}
+            style={{ flex:1, padding:"8px 0", borderRadius:7, border:"1px solid #EF444466", background:"#EF444411", color:"#EF4444", fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+            🗑 {t.delete}
+          </button>
+        </div>
+        {expanded && (
+          <div style={{ borderTop:`1px solid ${th.border}`, marginTop:10 }}>
+            {/* Tab bar */}
+            <div style={{ display:"flex", borderBottom:`1px solid ${th.border}` }}>
+              {[
+                { id:"deal", icon:"💼", label:"Deal" },
+                { id:"contact", icon:"👤", label:"Contact" },
+                { id:"files", icon:"📎", label:"Files" },
+              ].map(tab => (
+                <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+                  style={{ flex:1, padding:"8px 0", border:"none", background: activeTab===tab.id ? th.surface : th.surface2, borderBottom: activeTab===tab.id ? `2px solid ${meta.color}` : "2px solid transparent", color: activeTab===tab.id ? meta.color : th.muted, fontSize:11, fontWeight: activeTab===tab.id ? 700 : 400, cursor:"pointer", transition:"all .15s" }}>
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            <div style={{ padding:"12px 14px" }}>
+              {activeTab === "deal" && (
+                <>
+                  <div style={{ display:"flex", gap:6, marginBottom:8 }}>
+                    <button onClick={() => onStageChange(deal.id,"Won")} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"1px solid #10B98144", background: deal.stage==="Won"?"#10B98122":"none", color:"#10B981", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markWon}</button>
+                    <button onClick={() => onStageChange(deal.id,"Lost")} style={{ flex:1, padding:"7px 0", borderRadius:6, border:"1px solid #EF444444", background: deal.stage==="Lost"?"#EF444422":"none", color:"#EF4444", fontSize:11, fontWeight:600, cursor:"pointer" }}>{t.markLost}</button>
+                  </div>
+                  {deal.stage === "Lost" && deal.lostReason && (
+                    <div style={{ padding:"8px 10px", borderRadius:7, background:"#EF444408", border:"1px solid #EF444433", marginBottom:8 }}>
+                      <div style={{ fontSize:10, color:"#EF4444", textTransform:"uppercase", letterSpacing:".05em", marginBottom:3, fontWeight:600 }}>❌ {t.lostReason}</div>
+                      <div style={{ fontSize:12, color:th.text }}>{deal.lostReason}</div>
+                    </div>
+                  )}
+                  <div style={{ display:"flex", gap:14, fontSize:11, color:th.muted, marginBottom: deal.notes?8:0 }}>
+                    <span>{t.created}: <span style={{color:th.text2}}>{deal.created}</span></span>
+                    <span>{t.updated}: <span style={{color:th.text2}}>{deal.updated}</span></span>
+                  </div>
+                  {deal.notes && <div style={{ fontSize:12, color:th.muted, fontStyle:"italic" }}>"{deal.notes}"</div>}
+                </>
+              )}
+
+              {activeTab === "contact" && (
+                <>
+                  {(deal.contactName||deal.contactEmail||deal.contactPhone) ? (
+                    <>
+                      {deal.contactName && (
+                        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                          <div style={{ width:36, height:36, borderRadius:"50%", background:meta.color+"22", color:meta.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, flexShrink:0 }}>
+                            {deal.contactName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize:13, fontWeight:700, color:th.text }}>{deal.contactName}</div>
+                            {deal.contactRole && <div style={{ fontSize:11, color:th.muted }}>{deal.contactRole}</div>}
+                          </div>
+                        </div>
+                      )}
+                      <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                        {deal.contactEmail && (
+                          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
+                            <span style={{ fontSize:14, flexShrink:0 }}>✉️</span>
+                            <a href={`mailto:${deal.contactEmail}`} style={{ color:"#3B82F6", textDecoration:"none" }}>{deal.contactEmail}</a>
+                          </div>
+                        )}
+                        {deal.contactPhone && (
+                          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12 }}>
+                            <span style={{ fontSize:14, flexShrink:0 }}>📞</span>
+                            <a href={`tel:${deal.contactPhone}`} style={{ color:th.text2, textDecoration:"none" }}>{deal.contactPhone}</a>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign:"center", padding:"16px 0" }}>
+                      <div style={{ fontSize:24, marginBottom:8 }}>👤</div>
+                      <div style={{ fontSize:13, color:th.muted, marginBottom:12 }}>No contact added yet.</div>
+                      <button onClick={() => onEdit && onEdit(deal)}
+                        style={{ padding:"9px 22px", borderRadius:8, border:"none", background:"linear-gradient(135deg,#3B82F6,#6366F1)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity: onEdit ? 1 : 0.4 }}>
+                        ✏️ Edit lead to add contact
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeTab === "files" && (
+                <AttachmentsPanel dealId={deal.id} th={th} t={t} />
+              )}
+            </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
