@@ -504,6 +504,120 @@ function StageProgress({ stage, onChange, lang, th }) {
 }
 
 
+
+// ─── LostCard — compact archived card ────────────────────────────────────────
+function LostCard({ deal, onEdit, onDelete, onStageChange, th, t, lang, session, reactions, onReact, onDeleteReaction, onDeleteAll, readOnly }) {
+  const rxList = reactions || [];
+  const reactionCount = rxList.length;
+  const [hovered, setHovered] = useState(false);
+  const fmtM = (n) => n>=1000000?(n/1000000).toFixed(2)+"M":n>=1000?(n/1000).toFixed(0)+"k":String(n);
+
+  return (
+    <div style={{ position:"relative" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
+
+      {/* Floating emoji bar on hover */}
+      {hovered && (
+        <div style={{ position:"absolute", top:-44, right:8, zIndex:100,
+          background:th.surface, border:`1px solid ${th.border}`, borderRadius:12,
+          padding:"5px 8px", boxShadow:"0 6px 20px rgba(0,0,0,.18)",
+          display:"flex", alignItems:"center", gap:4 }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}>
+          <div style={{ position:"absolute", bottom:-6, right:16, width:10, height:10,
+            background:th.surface, border:`1px solid ${th.border}`,
+            borderBottom:"none", borderRight:"none", transform:"rotate(225deg)" }} />
+          {REACTION_EMOJIS.map(emoji => {
+            const myR = rxList.find(r => r.user_name === session?.name);
+            const cnt = rxList.filter(r=>r.emoji===emoji).length;
+            return (
+              <button key={emoji} onClick={() => onReact && onReact(deal.id, emoji, myR)}
+                title={rxList.filter(r=>r.emoji===emoji).map(r=>r.user_name).join(", ")||emoji}
+                style={{ position:"relative", padding:"2px 5px", borderRadius:7,
+                  border:`1.5px solid ${myR?.emoji===emoji?"#3B82F6":th.border}`,
+                  background:myR?.emoji===emoji?"#3B82F622":th.surface,
+                  fontSize:16, cursor:"pointer", lineHeight:1.3 }}
+                onMouseEnter={ev => ev.currentTarget.style.transform="scale(1.2)"}
+                onMouseLeave={ev => ev.currentTarget.style.transform="scale(1)"}>
+                {emoji}
+                {cnt>0 && <span style={{ position:"absolute", top:-3, right:-3, width:12, height:12,
+                  borderRadius:"50%", background:"#3B82F6", color:"#fff", fontSize:7,
+                  fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{cnt}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Reaction badge */}
+      {reactionCount > 0 && (
+        <div style={{ position:"absolute", top:-6, right:-6, minWidth:18, height:18,
+          borderRadius:9, background:"#EF4444", color:"#fff", fontSize:10, fontWeight:800,
+          display:"flex", alignItems:"center", justifyContent:"center", zIndex:20,
+          boxShadow:"0 2px 4px rgba(239,68,68,.4)", border:"2px solid #fff", padding:"0 3px" }}>
+          {reactionCount > 9 ? "9+" : reactionCount}
+        </div>
+      )}
+
+      {/* Compact card */}
+      <div style={{ display:"flex", alignItems:"center", gap:12, padding:"9px 14px",
+        background:th.surface, border:`1px solid ${th.border}`, borderRadius:9,
+        opacity:.75, transition:"opacity .15s" }}
+        onMouseEnter={e => e.currentTarget.style.opacity="1"}
+        onMouseLeave={e => e.currentTarget.style.opacity=".75"}>
+
+        {/* Red dot */}
+        <div style={{ width:8, height:8, borderRadius:"50%", background:"#EF4444", flexShrink:0 }} />
+
+        {/* Name + company */}
+        <div style={{ flex:1, minWidth:0 }}>
+          <span style={{ fontSize:13, fontWeight:600, color:th.text, textDecoration:"line-through", textDecorationColor:"#EF444466" }}>{deal.name}</span>
+          <span style={{ fontSize:12, color:th.muted, marginLeft:8 }}>{deal.company}</span>
+        </div>
+
+        {/* Value */}
+        <span style={{ fontSize:12, color:th.muted, textDecoration:"line-through", flexShrink:0 }}>{fmtM(deal.value)} EUR</span>
+
+        {/* Lost reason */}
+        {deal.lostReason && (
+          <span style={{ fontSize:11, padding:"2px 8px", borderRadius:6,
+            background:"#EF444411", color:"#EF4444", border:"1px solid #EF444433",
+            flexShrink:0, maxWidth:160, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+            ✕ {deal.lostReason}
+          </span>
+        )}
+
+        {/* Reactions summary */}
+        {rxList.length > 0 && (
+          <span style={{ fontSize:12, color:th.muted, flexShrink:0 }}>
+            {[...new Set(rxList.map(r=>r.emoji))].join("")} {rxList.length}
+          </span>
+        )}
+
+        {/* Actions — only own location */}
+        {!readOnly && (
+          <div style={{ display:"flex", gap:5, flexShrink:0 }}>
+            <button onClick={() => onStageChange && onStageChange(deal.id,"New Lead")}
+              title="Reopen as New Lead"
+              style={{ padding:"3px 8px", borderRadius:6, border:`1px solid ${th.border}`, background:"none", color:th.muted, fontSize:11, cursor:"pointer" }}>
+              ↩ Reopen
+            </button>
+            <button onClick={() => onEdit && onEdit(deal)}
+              style={{ padding:"3px 8px", borderRadius:6, border:`1px solid #3B82F644`, background:"#3B82F611", color:"#3B82F6", fontSize:11, cursor:"pointer" }}>
+              ✏️
+            </button>
+            <button onClick={() => onDelete && onDelete(deal.id)}
+              style={{ padding:"3px 8px", borderRadius:6, border:`1px solid #EF444433`, background:"none", color:"#EF4444", fontSize:11, cursor:"pointer" }}>
+              🗑
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── ReactionsBar ─────────────────────────────────────────────────────────────
 const REACTION_EMOJIS = ["🎉","❤️","🔥","💪","👏"];
 
@@ -2043,20 +2157,26 @@ export default function App() {
 
   const owners = session ? [...new Set([session.name, ...deals.map(d=>d.owner).filter(Boolean)])] : [session?.name||''].filter(Boolean);
 
+  const STAGE_ORDER = ["Negotiation","Proposal","Qualified","New Lead","Won","Lost"];
+
   // Filtered — from active location (own or browsed)
-  const filtered = activeDeals.filter(d => {
+  const filteredAll = activeDeals.filter(d => {
     const q = search.toLowerCase();
     return (!q || d.name.toLowerCase().includes(q) || d.company.toLowerCase().includes(q))
       && (filterStage === "All" || d.stage === filterStage)
       && (filterOwner === "All" || d.owner === filterOwner);
   });
+  const filtered = filteredAll.filter(d => d.stage !== "Lost")
+    .sort((a,b) => STAGE_ORDER.indexOf(a.stage) - STAGE_ORDER.indexOf(b.stage));
+  const filteredLost = filteredAll.filter(d => d.stage === "Lost");
 
   // Dashboard (always EN labels)
   const active = deals.filter(d => d.stage !== "Won" && d.stage !== "Lost");
   const won = deals.filter(d => d.stage === "Won");
   const lost = deals.filter(d => d.stage === "Lost");
-  const totalPipeline = active.reduce((s,d)=>s+d.value,0);
+  const totalLost = lost.reduce((s,d)=>s+d.value,0);
   const totalWon = won.reduce((s,d)=>s+d.value,0);
+  const totalPipeline = active.reduce((s,d)=>s+d.value,0);
   const weighted = active.reduce((s,d)=>s+d.value*d.probability/100,0);
   const convRate = (won.length+lost.length) > 0 ? Math.round(won.length/(won.length+lost.length)*100) : 0;
   const byStageVal = STAGES.map(s => deals.filter(d=>d.stage===s).reduce((sum,d)=>sum+d.value,0));
@@ -2181,9 +2301,9 @@ export default function App() {
             {/* Summary */}
             <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
               {[
-                {l:t.showing, v:`${filtered.length}`},
-                {l:t.totalValue, v:`${fmtM(filtered.reduce((s,d)=>s+d.value,0))} EUR`},
-                {l:t.weighted, v:`${fmtM(Math.round(filtered.filter(d=>d.stage!=="Won"&&d.stage!=="Lost").reduce((s,d)=>s+d.value*d.probability/100,0)))} EUR`},
+                {l:t.showing, v:`${filteredAll.length}`},
+                {l:t.totalValue, v:`${fmtM(active.reduce((s,d)=>s+d.value,0))} EUR`},
+                {l:t.weighted, v:`${fmtM(Math.round(active.reduce((s,d)=>s+d.value*d.probability/100,0)))} EUR`},
               ].map(k=>(
                 <div key={k.l} style={{ padding:"5px 12px", background:th.surface, borderRadius:7, border:`1px solid ${th.border}`, fontSize:12 }}>
                   <span style={{color:th.muted}}>{k.l}: </span><span style={{color:th.text2,fontWeight:600}}>{k.v}</span>
@@ -2200,14 +2320,44 @@ export default function App() {
                 {t.newLead}
               </button>
             )}
-            {filtered.length === 0 ? (
+            {filteredAll.length === 0 ? (
               <div style={{ textAlign:"center", padding:"40px 0", color:th.muted, fontSize:15 }}>
                 {t.noLeads} <button onClick={()=>{setSearch("");setFilterStage("All");setFilterOwner("All");}} style={{ background:"none", border:"none", color:"#3B82F6", cursor:"pointer", fontSize:15 }}>{t.clearFilters}</button>
               </div>
             ) : (
+              <>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
                 {filtered.map(d=><LeadCard key={d.id} deal={d} onEdit={isReadOnly?null:setModal} onStageChange={isReadOnly?null:changeStage} onDelete={isReadOnly?null:deleteDeal} lang={lang} th={th} readOnly={isReadOnly} session={session} reactions={reactions[String(d.id)]||[]} onReact={handleReact} onDeleteReaction={handleDeleteReaction} onDeleteAll={handleDeleteAllReactions} />)}
               </div>
+
+              {/* ── Lost Archive ── */}
+              {filteredLost.length > 0 && (
+                <div style={{ marginTop:24 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+                    <div style={{ flex:1, height:1, background:th.border }} />
+                    <span style={{ fontSize:12, color:th.muted, fontWeight:600, whiteSpace:"nowrap" }}>
+                      ✕ Archived — {filteredLost.length} lost {filteredLost.length===1?"lead":"leads"} · {fmtM(filteredLost.reduce((s,d)=>s+d.value,0))} EUR
+                    </span>
+                    <div style={{ flex:1, height:1, background:th.border }} />
+                  </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {filteredLost.map(d => (
+                      <LostCard key={d.id} deal={d}
+                        onEdit={isReadOnly?null:setModal}
+                        onDelete={isReadOnly?null:deleteDeal}
+                        onStageChange={isReadOnly?null:changeStage}
+                        th={th} t={t} lang={lang}
+                        session={session}
+                        reactions={reactions[String(d.id)]||[]}
+                        onReact={handleReact}
+                        onDeleteReaction={handleDeleteReaction}
+                        onDeleteAll={handleDeleteAllReactions}
+                        readOnly={isReadOnly} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              </>
             )}
           </>
         )}
