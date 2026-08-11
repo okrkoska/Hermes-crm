@@ -2340,7 +2340,7 @@ export default function App() {
                     </span>
                     <div style={{ flex:1, height:1, background:th.border }} />
                   </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:6 }}>
                     {filteredLost.map(d => (
                       <LostCard key={d.id} deal={d}
                         onEdit={isReadOnly?null:setModal}
